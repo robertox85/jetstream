@@ -11,6 +11,8 @@ class Nota extends Model
     /** @use HasFactory<\Database\Factories\NotaFactory> */
     use HasFactory;
 
+    protected $table = 'note';
+
     // Definizione delle tipologie come costanti
     const TIPO_REGISTRO_CONTABILE = 'registro_contabile';
     const TIPO_ANNOTAZIONI = 'annotazioni';

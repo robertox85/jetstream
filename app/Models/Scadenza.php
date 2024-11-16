@@ -11,6 +11,8 @@ class Scadenza extends Model
     /** @use HasFactory<\Database\Factories\ScadenzaFactory> */
     use HasFactory;
 
+    protected $table = 'scadenze';
+
     // Definizione degli stati come costanti
     const STATO_DA_INIZIARE = 'da_iniziare';
     const STATO_IN_CORSO = 'in_corso';

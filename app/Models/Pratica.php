@@ -12,6 +12,8 @@ class Pratica extends Model
     use HasFactory;
     use LogsActivity;
 
+    protected $table = 'pratiche';
+
     // Definizione degli stati possibili come costanti
     const STATO_APERTO = 'aperto';
     const STATO_CHIUSO = 'chiuso';

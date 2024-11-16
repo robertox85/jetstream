@@ -11,6 +11,9 @@ class Udienza extends Model
     /** @use HasFactory<\Database\Factories\UdienzaFactory> */
     use HasFactory;
 
+
+    protected $table = 'udienze';
+
     // Definizione degli stati come costanti
     const STATO_DA_INIZIARE = 'da_iniziare';
     const STATO_IN_CORSO = 'in_corso';

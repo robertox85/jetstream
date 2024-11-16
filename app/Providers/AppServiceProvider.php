@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Permission;
 use App\Models\Role;
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {

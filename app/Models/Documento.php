@@ -11,6 +11,8 @@ class Documento extends Model
     /** @use HasFactory<\Database\Factories\DocumentoFactory> */
     use HasFactory;
 
+    protected $table = 'documenti';
+
     // Mass assignment protection
     protected $fillable = [
         'pratica_id',

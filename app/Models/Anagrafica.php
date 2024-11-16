@@ -10,6 +10,8 @@ class Anagrafica extends Model
     /** @use HasFactory<\Database\Factories\AnagraficaFactory> */
     use HasFactory;
 
+    protected $table = 'anagrafiche';
+
     // Costanti per i tipi
     const TYPE_CONTROPARTE = 'controparte';
     const TYPE_ASSISTITO = 'assistito';
