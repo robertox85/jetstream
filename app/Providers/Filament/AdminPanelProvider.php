@@ -2,11 +2,19 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\AnagraficaResource;
+use App\Filament\Resources\CategoriaDocumentoResource;
+use App\Filament\Resources\DocumentoResource;
+use App\Filament\Resources\NotaResource;
+use App\Filament\Resources\PraticaResource;
+use App\Filament\Resources\ScadenzaResource;
+use App\Filament\Resources\UdienzaResource;
 use Filament\Http\Middleware\Authenticate;
 use BezhanSalleh\FilamentShield\Middleware\SyncShieldTenant;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -33,7 +41,46 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
-            
+            ->passwordReset()
+            ->navigationGroups([
+
+                NavigationGroup::make()
+                    ->label('Gestione Pratiche')
+                    ->icon('heroicon-o-briefcase')
+                    ->items([
+                        // Risorse relative alle pratiche
+                        PraticaResource::class,
+                        NotaResource::class
+                    ]),
+
+                NavigationGroup::make()
+                    ->label('Agenda')
+                    ->icon('heroicon-o-calendar')
+                    ->items([
+                        // Scadenze e udienze
+                        ScadenzaResource::class,
+                        UdienzaResource::class
+                    ]),
+
+                NavigationGroup::make()
+                    ->label('Anagrafiche')
+                    ->icon('heroicon-o-users')
+                    ->items([
+                        // Risorse relative alle anagrafiche
+                        AnagraficaResource::class,
+
+                    ]),
+
+                NavigationGroup::make()
+                    ->label('Documenti')
+                    ->icon('heroicon-o-document')
+                    ->items([
+                        // Risorse relative ai documenti
+                        DocumentoResource::class,
+                        CategoriaDocumentoResource::class
+                    ]),
+
+            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

@@ -5,12 +5,14 @@ namespace App\Models;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Pratica extends Model
 {
     /** @use HasFactory<\Database\Factories\PraticaFactory> */
     use HasFactory;
     use LogsActivity;
+    use SoftDeletes;
 
     protected $table = 'pratiche';
 
@@ -75,30 +77,49 @@ class Pratica extends Model
     {
         return $this->belongsToMany(Anagrafica::class, 'anagrafica_pratica')
             ->withPivot('tipo_relazione')
-            ->withTimestamps()
-            ->withTrashed();
+            ->withTimestamps();
     }
 
     // Relazione con il modello Assistito
     public function assistiti()
     {
-        return $this->belongsToMany(Anagrafica::class, 'anagrafica_pratica')
+        return $this->belongsToMany(Assistito::class, 'anagrafica_pratica', 'pratica_id', 'anagrafica_id')
             ->withPivot('tipo_relazione')
             ->withTimestamps()
-            ->withTrashed()
-            ->wherePivot('tipo_relazione', 'assistito');
+            ->wherePivot('tipo_relazione', 'assistito')
+            ->withPivotValue('tipo_relazione', 'assistito'); // Aggiunge automaticamente il tipo
     }
 
-    // Relazione con il modello Controparte
+// Relazione con il modello Controparte
     public function controparti()
     {
-        return $this->belongsToMany(Anagrafica::class, 'anagrafica_pratica')
+        return $this->belongsToMany(Controparte::class, 'anagrafica_pratica', 'pratica_id', 'anagrafica_id')
             ->withPivot('tipo_relazione')
             ->withTimestamps()
-            ->withTrashed()
-            ->wherePivot('tipo_relazione', 'controparte');
+            ->wherePivot('tipo_relazione', 'controparte')
+            ->withPivotValue('tipo_relazione', 'controparte'); // Aggiunge automaticamente il tipo
     }
 
+// Modifica anche i metodi di utilità
+    public function aggiungiAssistito(Assistito $assistito)
+    {
+        $this->assistiti()->attach($assistito->id);
+    }
+
+    public function aggiungiControparte(Controparte $controparte)
+    {
+        $this->controparti()->attach($controparte->id);
+    }
+
+    public function isAssistito(Assistito $assistito)
+    {
+        return $this->assistiti()->where('anagrafiche.id', $assistito->id)->exists();
+    }
+
+    public function isControparte(Controparte $controparte)
+    {
+        return $this->controparti()->where('anagrafiche.id', $controparte->id)->exists();
+    }
 
     // Pratiche aperte
     public function scopeAperte($query)
@@ -124,7 +145,7 @@ class Pratica extends Model
      * @return string
      * @throws \Exception
      */
-    public function generateNumeroPratica(string $prefisso = 'STD'): string
+    public function generateNumeroPratica(string $prefisso = 'STD', string $separatore = '-'): string
     {
         // Verifica che esista team_id
         if (!$this->team_id) {
@@ -140,28 +161,25 @@ class Pratica extends Model
         $anno = date('Y');
 
         // Trova l'ultimo numero progressivo per questo team e anno
-        $ultimaPratica = static::where('team_id', $this->team_id)
+        // Trova l'ultimo numero progressivo per questo team e anno, inclusi i soft deleted
+        $ultimoNumero = static::withTrashed()
+            ->where('team_id', $this->team_id)
             ->whereYear('created_at', $anno)
-            ->where('numero_pratica', 'like', "%/{$anno}/%")
-            ->orderByRaw('CAST(SUBSTRING_INDEX(numero_pratica, "/", -1) AS UNSIGNED) DESC')
-            ->first();
+            ->max('numero_pratica');
 
-        if (!$ultimaPratica || !$ultimaPratica->numero_pratica) {
+        // Se non ci sono pratiche per questo team e anno, inizia da 1
+        if (!$ultimoNumero) {
             $numeroProgressivo = 1;
         } else {
-            // Estrae l'ultimo numero progressivo
-            $parts = explode('/', $ultimaPratica->numero_pratica);
-            $numeroProgressivo = intval(end($parts)) + 1;
+            // Estrai il numero progressivo dall'ultimo numero pratica
+            $numeroProgressivo = (int)substr($ultimoNumero, -3);
+            $numeroProgressivo++;
         }
 
-        // Formatta il numero pratica
-        return sprintf(
-            '%s/%s/%s/%s',
-            $prefisso,
-            strtoupper($teamName),
-            $anno,
-            str_pad($numeroProgressivo, 3, '0', STR_PAD_LEFT)
-        );
+        // Formatta il numero progressivo con 3 cifre
+        $numeroProgressivo = str_pad($numeroProgressivo, 3, '0', STR_PAD_LEFT);
+
+        return "{$prefisso}{$separatore}{$teamName}{$separatore}{$anno}{$separatore}{$numeroProgressivo}";
     }
 
     /**
@@ -175,6 +193,34 @@ class Pratica extends Model
             if (empty($pratica->numero_pratica)) {
                 $pratica->numero_pratica = $pratica->generateNumeroPratica();
             }
+        });
+
+
+        // Quando una pratica viene soft-deleted
+        static::deleting(function($pratica) {
+            // Elimina (soft delete) tutte le relazioni
+            $pratica->note()->delete();
+            $pratica->scadenze()->delete();
+            $pratica->udienze()->delete();
+            $pratica->documenti()->delete();
+        });
+
+        // Quando una pratica viene ripristinata
+        static::restored(function($pratica) {
+            // Ripristina tutte le relazioni
+            $pratica->note()->withTrashed()->restore();
+            $pratica->scadenze()->withTrashed()->restore();
+            $pratica->udienze()->withTrashed()->restore();
+            $pratica->documenti()->withTrashed()->restore();
+        });
+
+        // Quando una pratica viene eliminata definitivamente
+        static::forceDeleting(function($pratica) {
+            // Elimina definitivamente tutte le relazioni
+            $pratica->note()->forceDelete();
+            $pratica->scadenze()->forceDelete();
+            $pratica->udienze()->forceDelete();
+            $pratica->documenti()->forceDelete();
         });
     }
 
@@ -203,30 +249,4 @@ class Pratica extends Model
         return $nuovoNumero;
     }
 
-
-    // Metodi di utilità per l'aggiunta di anagrafiche
-    public function aggiungiAssistito(Anagrafica $anagrafica)
-    {
-        return $this->anagrafiche()->attach($anagrafica->id, [
-            'tipo_relazione' => 'assistito'
-        ]);
-    }
-
-    public function aggiungiControparte(Anagrafica $anagrafica)
-    {
-        return $this->anagrafiche()->attach($anagrafica->id, [
-            'tipo_relazione' => 'controparte'
-        ]);
-    }
-
-    // Metodi di utilità per la verifica
-    public function isAssistito(Anagrafica $anagrafica)
-    {
-        return $this->assistiti()->where('anagrafiche.id', $anagrafica->id)->exists();
-    }
-
-    public function isControparte(Anagrafica $anagrafica)
-    {
-        return $this->controparti()->where('anagrafiche.id', $anagrafica->id)->exists();
-    }
 }

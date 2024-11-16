@@ -17,17 +17,22 @@ class AnagraficaResource extends Resource
 {
     protected static ?string $model = Anagrafica::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $modelLabel = 'Anagrafica';
     protected static ?string $pluralModelLabel = 'Anagrafiche';
+
     protected static ?string $slug = 'anagrafiche';
+    protected static ?string $navigationGroup = 'Anagrafiche';
+
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Form $form): Form
     {
+
         return $form
             ->schema([
-                //
+
             ]);
     }
 
@@ -35,7 +40,34 @@ class AnagraficaResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('nome_completo')
+                    ->label('Nome/Denominazione')
+                    ->searchable(['nome', 'cognome', 'denominazione'])
+                    ->sortable(),
+
+
+
+
+                Tables\Columns\TextColumn::make('email')
+                    ->searchable()
+                    ->sortable(),
+
+
+                Tables\Columns\TextColumn::make('pratiche.nome')
+                    ->label('Pratiche')
+                    ->searchable()
+
+
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('type')
+                    ->label('Tipo')
+                    ->badge()
+                    ->sortable()
+                    ->colors([
+                        'primary' => 'controparte',
+                        'success' => 'assistito',
+                    ]),
             ])
             ->filters([
                 //

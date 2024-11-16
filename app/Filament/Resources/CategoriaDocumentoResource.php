@@ -17,17 +17,24 @@ class CategoriaDocumentoResource extends Resource
 {
     protected static ?string $model = CategoriaDocumento::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $modelLabel = 'Categoria Documento';
     protected static ?string $pluralModelLabel = 'Categorie Documenti';
     protected static ?string $slug = 'categorie_documenti';
 
+    protected static ?string $navigationGroup = 'Documenti';
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                //
+                Forms\Components\TextInput::make('nome')
+                    ->label('Nome')
+                    ->required(),
+                Forms\Components\Textarea::make('descrizione')
+                    ->label('Descrizione')
+                    ->required(),
             ]);
     }
 
@@ -35,7 +42,14 @@ class CategoriaDocumentoResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('nome')
+                    ->label('Nome')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('descrizione')
+                    ->label('Descrizione')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->filters([
                 //

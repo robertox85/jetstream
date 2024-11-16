@@ -95,6 +95,13 @@ class Nota extends Model
 
         // Prima del salvataggio, se è una nuova nota
         static::creating(function ($nota) {
+
+            // Traccia l'utente che ha creato la nota
+            if (auth()->check()) {
+                $nota->user_id = auth()->id();
+            }
+
+
             // Se non è specificata la visibilità, imposta come pubblica
             if (!isset($nota->visibilita)) {
                 $nota->visibilita = self::VISIBILITA_PUBBLICA;

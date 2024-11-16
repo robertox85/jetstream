@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Scopes\TeamVisibilityScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Log;
 use Laravel\Jetstream\Events\TeamCreated;
 use Laravel\Jetstream\Events\TeamDeleted;
 use Laravel\Jetstream\Events\TeamUpdated;
@@ -51,6 +53,35 @@ class Team extends JetstreamTeam
     public function roles(): HasMany
     {
         return $this->hasMany(\App\Models\Role::class);
+    }
+
+    protected static function booted()
+    {
+        parent::booted();
+
+        // static::addGlobalScope(new TeamVisibilityScope);
+
+        static::creating(function ($team) {
+            $team->personal_team = false; // Forza sempre false
+        });
+
+        static::saving(function (Team $team) {
+            if (!$team->user_id) {
+                $team->user_id = auth()->id();
+            }
+        });
+
+        // add user to team when created
+        static::creating(function ($team) {
+
+            if (!$team->user_id) {
+
+                $team->user_id = auth()->id();
+            }
+
+            // Imposta personal_team = true solo durante la registrazione
+            // $team->personal_team = request()->is('register');
+        });
     }
 
 }

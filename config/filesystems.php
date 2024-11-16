@@ -57,6 +57,53 @@ return [
             'throw' => false,
         ],
 
+        'pratiche' => [
+            'driver' => 'local',
+            'root' => storage_path('app/pratiche'),
+            'url' => env('APP_URL').'/pratiche',
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
+        'nas' => [
+            'driver' => 'sftp', // oppure 'ftp' se il NAS non supporta SFTP
+            'host' => env('NAS_HOST', '192.168.1.100'),
+            'username' => env('NAS_USERNAME', 'your-username'),
+            'password' => env('NAS_PASSWORD', 'your-password'),
+            'port' => env('NAS_PORT', 22),
+            'root' => env('NAS_ROOT', '/path/to/documents'),
+            'visibility' => 'private',
+            'directory_visibility' => 'private',
+            // Opzionale: configurazione SSL/TLS
+            'ssl' => env('NAS_SSL', true),
+            'timeout' => 30,
+            'throw' => true,
+        ],
+
+        'remote_ftp' => [
+            'driver' => 'ftp',
+            'host' => env('REMOTE_HOST', 'ftp.example.com'),
+            'username' => env('REMOTE_USERNAME'),
+            'password' => env('REMOTE_PASSWORD'),
+            'port' => env('REMOTE_PORT', 21),
+            'root' => env('REMOTE_ROOT', '/'),
+            'passive' => true,
+            'ssl' => true,
+            'timeout' => 30,
+        ],
+
+        'remote_sftp' => [
+            'driver' => 'sftp',
+            'host' => env('REMOTE_HOST', 'sftp.example.com'),
+            'username' => env('REMOTE_USERNAME'),
+            'password' => env('REMOTE_PASSWORD'),
+            'port' => env('REMOTE_PORT', 22),
+            'root' => env('REMOTE_ROOT', '/'),
+            'visibility' => 'private',
+            'timeout' => 30,
+            'throw' => true,
+        ]
+
     ],
 
     /*

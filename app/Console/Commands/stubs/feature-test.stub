@@ -1,0 +1,51 @@
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+use App\Models\{{modelName}};
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+class {{modelName}}Test extends TestCase
+{
+    use RefreshDatabase;
+
+    /** @test */
+    public function can_create_{{modelName}}()
+    {
+        $model = {{modelName}}::factory()->create();
+
+        $this->assertDatabaseHas('{{tableName}}', [
+            'id' => $model->id
+        ]);
+    }
+
+    /** @test */
+    public function can_update_{{modelName}}()
+    {
+        $model = {{modelName}}::factory()->create();
+
+        $model->update([
+            // Add update fields
+        ]);
+
+        $this->assertDatabaseHas('{{tableName}}', [
+            'id' => $model->id,
+            // Add assertions
+        ]);
+    }
+
+    /** @test */
+    public function can_delete_{{modelName}}()
+    {
+        $model = {{modelName}}::factory()->create();
+
+        $model->delete();
+
+        $this->assertSoftDeleted($model);
+    }
+
+    {{fillableFields}}
+
+    {{relations}}
+}

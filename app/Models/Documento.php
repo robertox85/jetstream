@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class Documento extends Model
@@ -102,23 +103,46 @@ class Documento extends Model
     {
         parent::boot();
 
-        // Prima del salvataggio
         static::creating(function ($documento) {
-            // Se non è specificato l'uploader, usa l'utente autenticato
-            if (!$documento->user_id && auth()->check()) {
-                $documento->user_id = auth()->id();
-            }
-        });
+            if (!empty($documento->file_path)) {
+                try {
+                    $disk = Storage::disk('pratiche');
 
-        // Dopo la cancellazione
-        static::deleted(function ($documento) {
-            // Se è una soft delete, non elimina il file
-            if (!$documento->isForceDeleting()) {
-                return;
-            }
+                    // Se il file esiste nella directory temporanea, spostalo
+                    if ($disk->exists($documento->file_path)) {
+                        $originalName = basename($documento->file_path);
 
-            // Elimina il file fisico
-            Storage::delete($documento->file_path);
+                        $documento->fill([
+                            'original_name' => $originalName,
+                            'user_id' => auth()->id(),
+                            'mime_type' => $disk->mimeType($documento->file_path) ?? 'application/octet-stream',
+                            'size' => $disk->size($documento->file_path) ?? 0,
+                        ]);
+
+                        // Calcola hash
+                        $fullPath = $disk->path($documento->file_path);
+                        if (file_exists($fullPath)) {
+                            $documento->hash_file = hash_file('sha256', $fullPath);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Errore nel processare il documento: ' . $e->getMessage());
+
+                    $documento->fill([
+                        'mime_type' => 'application/octet-stream',
+                        'size' => 0
+                    ]);
+                }
+            }
         });
     }
+
+    // Accessor per ottenere l'URL del file
+    public function getFileUrlAttribute()
+    {
+        return Storage::disk('public')->url($this->file_path);
+    }
+
+    // Accessor per la dimensione formattata
+
 }

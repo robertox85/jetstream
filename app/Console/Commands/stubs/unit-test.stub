@@ -1,0 +1,27 @@
+<?php
+
+namespace Tests\Unit;
+
+use Tests\TestCase;
+use App\Models\{{modelName}};
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+class {{modelName}}Test extends TestCase
+{
+    use RefreshDatabase;
+
+    /** @test */
+    public function it_has_correct_fillable_fields()
+    {
+        $model = new {{modelName}};
+        $expected = [
+            // Add expected fillable fields
+        ];
+
+        $this->assertEquals($expected, $model->getFillable());
+    }
+
+    {{fillableFields}}
+
+    {{relations}}
+}

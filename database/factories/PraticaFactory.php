@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -33,6 +34,7 @@ class PraticaFactory extends Factory
             'priority' => $this->faker->randomElement(['alta', 'media', 'bassa']),
             'data_apertura' => $this->faker->dateTimeBetween('-1 year', 'now'),
             'team_id' => Team::factory(),  // Assicurati di avere una TeamFactory
+
         ];
     }
 

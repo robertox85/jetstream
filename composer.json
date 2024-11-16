@@ -12,6 +12,7 @@
         "laravel/jetstream": "^5.3",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
+        "league/flysystem-sftp-v3": "^3.29",
         "livewire/livewire": "^3.0",
         "stechstudio/filament-impersonate": "^3.14",
         "tomatophp/filament-users": "^2.0"
