@@ -103,6 +103,7 @@ class PraticaResource extends Resource
                     // Tab Documenti
                     Forms\Components\Tabs\Tab::make('Documenti')
                         ->icon('heroicon-m-document')
+                        ->hidden()
                         ->schema([
                             Forms\Components\Section::make('Gestione Documenti')
                                 ->columns([

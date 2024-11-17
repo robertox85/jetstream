@@ -24,6 +24,7 @@ class CategoriaDocumentoResource extends Resource
     protected static ?string $slug = 'categorie_documenti';
 
     protected static ?string $navigationGroup = 'Documenti';
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Form $form): Form
     {
