@@ -58,7 +58,13 @@ return new class extends Migration
 
             // Riferimento al team assegnato alla pratica
             // In caso di eliminazione del team, il campo viene impostato a NULL
-            $table->foreignId('team_id')->constrained('teams')->onDelete('set null')->nullable();
+            // $table->foreignId('team_id')->constrained('teams')->onDelete('set null')->nullable();
+            // Modifica la definizione della foreign key in questo modo
+            $table->unsignedBigInteger('team_id')->nullable();
+            $table->foreign('team_id')
+                ->references('id')
+                ->on('teams')
+                ->onDelete('set null');
 
             // created_at e updated_at automatici
             $table->timestamps();
