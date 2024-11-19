@@ -7,6 +7,8 @@ use App\Filament\Resources\NotaResource\RelationManagers;
 use App\Models\Nota;
 use App\Models\Pratica;
 use App\Models\User;
+use App\Policies\Traits\HasTeamScope;
+use App\Traits\HasTeamAuthorizationScope;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -14,9 +16,12 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Log;
 
 class NotaResource extends Resource
 {
+
+
     protected static ?string $model = Nota::class;
 
     //  protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -27,6 +32,16 @@ class NotaResource extends Resource
     protected static ?string $slug = 'note';
     protected static ?string $navigationGroup = 'Gestione Pratiche';
 
+    protected static ?int $navigationSort = 3;
+
+    use HasTeamAuthorizationScope;
+
+    public static function getEloquentQuery(): Builder
+    {
+       $query = static::getPraticaBasedQuery();
+       return static::addVisibilityScope($query, true);
+
+    }
 
     public static function form(Form $form): Form
     {
@@ -59,20 +74,11 @@ class NotaResource extends Resource
                             ->required(),
                         Forms\Components\Select::make('tipologia')
                             ->label('Tipologia')
-                            ->options([
-                                'Nota' => 'Nota',
-                                'Promemoria' => 'Promemoria',
-                                'Scadenza' => 'Scadenza',
-                                'Richiesta' => 'Richiesta',
-                                'Altro' => 'Altro',
-                            ])
+                            ->options(config('pratica-form.tipologie_note'))
                             ->required(),
                         Forms\Components\Select::make('visibilita')
                             ->label('Visibilità')
-                            ->options([
-                                'Pubblica' => 'Pubblica',
-                                'Privata' => 'Privata',
-                            ])
+                            ->options(config('pratica-form.visibilita_note'))
                             ->required(),
                     ]),
             ]);
@@ -82,6 +88,13 @@ class NotaResource extends Resource
     {
         return $table
             ->columns([
+
+                // Nome pratica
+                Tables\Columns\TextColumn::make('pratica.nome')
+                    ->label('Pratica')
+                    ->searchable()
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('oggetto')
                     ->limit(30)
                     ->searchable()
@@ -93,7 +106,7 @@ class NotaResource extends Resource
 
 
                 Tables\Columns\TextColumn::make('pratica_id')
-                    ->label('Pratica')
+                    ->label('Nr. Pratica')
                     ->getStateUsing(function ($record) {
                         $pratica_id = $record->pratica_id;
                         return Pratica::find($pratica_id)->numero_pratica ?? 'N/A';
@@ -103,7 +116,7 @@ class NotaResource extends Resource
 
                 Tables\Columns\TextColumn::make('visibilita')
                     ->badge()
-                    ->color(fn ($record) => match ($record->visibilita) {
+                    ->color(fn($record) => match ($record->visibilita) {
                         'pubblica' => 'success',
                         'privata' => 'danger',
                     })

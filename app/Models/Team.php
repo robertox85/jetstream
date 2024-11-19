@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Scopes\TeamVisibilityScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Log;
 use Laravel\Jetstream\Events\TeamCreated;
@@ -23,6 +24,7 @@ class Team extends JetstreamTeam
      */
     protected $fillable = [
         'name',
+        'user_id',
         'personal_team',
     ];
 
@@ -49,39 +51,46 @@ class Team extends JetstreamTeam
         ];
     }
 
+
     /** @return HasMany<\App\Models\Role, self> */
     public function roles(): HasMany
     {
         return $this->hasMany(\App\Models\Role::class);
     }
 
-    protected static function booted()
+    protected static function boot()
     {
-        parent::booted();
+        parent::boot();
 
-        // static::addGlobalScope(new TeamVisibilityScope);
+        /// static::addGlobalScope(new TeamVisibilityScope);
 
         static::creating(function ($team) {
             $team->personal_team = false; // Forza sempre false
         });
 
-        static::saving(function (Team $team) {
-            if (!$team->user_id) {
-                $team->user_id = auth()->id();
-            }
-        });
 
-        // add user to team when created
-        static::creating(function ($team) {
 
-            if (!$team->user_id) {
-
-                $team->user_id = auth()->id();
-            }
-
-            // Imposta personal_team = true solo durante la registrazione
-            // $team->personal_team = request()->is('register');
-        });
     }
 
+
+    /**
+     * L'utente proprietario del team.
+     */
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class)->withTimestamps();
+    }
+
+    /**
+     * Get pratiche associated with this team.
+     */
+    public function pratiche(): HasMany
+    {
+        return $this->hasMany(Pratica::class);
+    }
 }

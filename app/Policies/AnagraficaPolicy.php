@@ -4,11 +4,13 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\Anagrafica;
+use App\Policies\Traits\HasPermission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class AnagraficaPolicy
 {
     use HandlesAuthorization;
+    use HasPermission;
 
     /**
      * Determine whether the user can view any models.

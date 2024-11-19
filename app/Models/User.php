@@ -69,4 +69,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+
+    // detach user from owned teams if user is updated
+
 }

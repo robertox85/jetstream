@@ -4,7 +4,10 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ScadenzaResource\Pages;
 use App\Filament\Resources\ScadenzaResource\RelationManagers;
+use App\Models\AnagraficaPratica;
+use App\Models\Pratica;
 use App\Models\Scadenza;
+use App\Traits\HasTeamAuthorizationScope;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -12,6 +15,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Log;
 
 class ScadenzaResource extends Resource
 {
@@ -25,6 +29,12 @@ class ScadenzaResource extends Resource
     protected static ?string $slug = 'scadenze';
     protected static ?string $navigationGroup = 'Agenda';
 
+    use HasTeamAuthorizationScope;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return static::getPraticaBasedQuery();
+    }
 
     public static function form(Form $form): Form
     {

@@ -9,12 +9,14 @@ use App\Filament\Resources\NotaResource;
 use App\Filament\Resources\PraticaResource;
 use App\Filament\Resources\ScadenzaResource;
 use App\Filament\Resources\UdienzaResource;
+use App\Models\Anagrafica;
 use Filament\Http\Middleware\Authenticate;
 use BezhanSalleh\FilamentShield\Middleware\SyncShieldTenant;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -42,8 +44,28 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->passwordReset()
+            ->navigationItems([
+
+                NavigationItem::make('Ruoli & Permessi')
+                    ->visible(fn(): bool => auth()->user()->hasRole('super_admin'))
+                    ->group('Amministrazione')
+                    ->url('/admin/shield/roles'),
+
+                NavigationItem::make('Teams')
+                    ->visible(fn(): bool => auth()->user()->hasRole('super_admin'))
+                    ->group('Amministrazione')
+                    ->url('/admin/teams'),
+            ])
             ->navigationGroups([
 
+                NavigationGroup::make()
+                    ->label('Amministrazione')
+                    ->icon('heroicon-o-cog')
+                    ->items([
+
+                    ]),
+
+                // Gruppo di navigazione per la gestione delle pratiche
                 NavigationGroup::make()
                     ->label('Gestione Pratiche')
                     ->icon('heroicon-o-briefcase')
@@ -53,6 +75,8 @@ class AdminPanelProvider extends PanelProvider
                         NotaResource::class
                     ]),
 
+
+                // Gruppo di navigazione per la gestione dell'agenda
                 NavigationGroup::make()
                     ->label('Agenda')
                     ->icon('heroicon-o-calendar')
@@ -62,6 +86,7 @@ class AdminPanelProvider extends PanelProvider
                         UdienzaResource::class
                     ]),
 
+                // Gruppo di navigazione per la gestione delle anagrafiche
                 NavigationGroup::make()
                     ->label('Anagrafiche')
                     ->icon('heroicon-o-users')
@@ -71,6 +96,7 @@ class AdminPanelProvider extends PanelProvider
 
                     ]),
 
+                // Gruppo di navigazione per la gestione dei documenti
                 NavigationGroup::make()
                     ->label('Documenti')
                     ->icon('heroicon-o-document')
@@ -106,6 +132,7 @@ class AdminPanelProvider extends PanelProvider
                 FilamentShieldPlugin::make(),
                 FilamentUsersPlugin::make()
             ])
+
             ->authMiddleware([
                 Authenticate::class,
             ]);

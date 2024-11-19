@@ -4,9 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ControparteResource\Pages;
 use App\Filament\Resources\ControparteResource\RelationManagers;
+use App\Models\AnagraficaPratica;
 use App\Models\Controparte;
+use App\Models\Pratica;
 use App\Traits\HasAnagraficaForm;
 use App\Traits\HasPraticaForm;
+use App\Traits\HasTeamAuthorizationScope;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -27,6 +30,14 @@ class ControparteResource extends Resource
 
     protected static ?string $slug = 'controparti';
     protected static ?string $navigationGroup = 'Anagrafiche';
+
+
+
+    use HasTeamAuthorizationScope;
+    public static function getEloquentQuery(): Builder
+    {
+        return static::getAnagraficaBasedQuery();
+    }
 
 
 

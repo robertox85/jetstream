@@ -134,10 +134,6 @@ trait HasPraticaForm
     {
         return [
 
-
-
-
-
             Forms\Components\RichEditor::make('descrizione')->nullable(),
             Forms\Components\FileUpload::make('file_path')
                 ->label('File')
@@ -146,7 +142,7 @@ trait HasPraticaForm
                 ->storeFileNamesIn('original_name')
                 ->disk(config('pratica-form.documenti.disk'))
                 ->directory(config('pratica-form.documenti.directory'))
-                ->maxSize(config('pratica-form.documenti.max_size'))
+                ->maxSize((int)config('pratica-form.documenti.max_size'))
                 ->downloadable()
                 ->openable()
                 ->openable()
@@ -208,25 +204,16 @@ trait HasPraticaForm
         //tipologia
         //visibilita
         return [
-            Forms\Components\Grid::make([
-                'default' => 1,    // Una colonna su mobile
-                'sm' => 1,         // Una colonna su schermi piccoli
-                'md' => 2,         // Due colonne su tablet
-                'lg' => 2,         // Due colonne su desktop
-            ])
-                ->live()
-                ->schema([
-                    Forms\Components\TextInput::make('oggetto')
-                        ->required(),
-                    Forms\Components\Textarea::make('nota')
-                        ->required(),
-                    Forms\Components\Select::make('tipologia')
-                        ->options(config('pratica-form.tipologie_note'))
-                        ->required(),
-                    Forms\Components\Select::make('visibilita')
-                        ->options(config('pratica-form.visibilita_note'))
-                        ->required(),
-                ]),
+            Forms\Components\TextInput::make('oggetto')
+                ->required(),
+            Forms\Components\Textarea::make('nota')
+                ->required(),
+            Forms\Components\Select::make('tipologia')
+                ->options(config('pratica-form.tipologie_note'))
+                ->required(),
+            Forms\Components\Select::make('visibilita')
+                ->options(config('pratica-form.visibilita_note'))
+                ->required(),
         ];
     }
 }

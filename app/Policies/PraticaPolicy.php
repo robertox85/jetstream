@@ -47,7 +47,19 @@ class PraticaPolicy
      */
     public function delete(User $user, Pratica $pratica): bool
     {
-        return $user->can('delete_pratica');
+
+        // Only if user is super admin, Amministratore or owner of the pratica
+        if ($user->hasRole('super-admin') || $user->hasRole('Amministratore')) {
+            return true;
+        }
+
+        // if is the owner of the team that owns the pratica
+
+        if ($user->id === $pratica->team->user_id) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

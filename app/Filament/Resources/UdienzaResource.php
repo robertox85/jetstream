@@ -6,6 +6,7 @@ use App\Filament\Resources\UdienzaResource\Pages;
 use App\Filament\Resources\UdienzaResource\RelationManagers;
 use App\Models\Pratica;
 use App\Models\Udienza;
+use App\Traits\HasTeamAuthorizationScope;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -26,6 +27,13 @@ class UdienzaResource extends Resource
 
     protected static ?string $navigationGroup = 'Agenda';
 
+
+    use HasTeamAuthorizationScope;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return static::getPraticaBasedQuery();
+    }
 
     public static function form(Form $form): Form
     {

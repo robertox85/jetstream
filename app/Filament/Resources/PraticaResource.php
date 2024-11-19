@@ -14,6 +14,7 @@ use App\Models\Pratica;
 use App\Models\Team;
 use App\Traits\HasAnagraficaForm;
 use App\Traits\HasPraticaForm;
+use App\Traits\HasTeamAuthorizationScope;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -43,6 +44,13 @@ class PraticaResource extends Resource
     protected static ?string $slug = 'pratiche';
 
     protected static ?string $navigationGroup = 'Gestione Pratiche';
+
+    use HasTeamAuthorizationScope;
+
+    public static function getEloquentQuery(): Builder
+    {
+       return static::getTeamBasedQuery();
+    }
 
     public static function form(Form $form): Form
     {
@@ -265,36 +273,65 @@ class PraticaResource extends Resource
                     Forms\Components\Tabs\Tab::make('Note')
                         ->icon('heroicon-m-pencil-square')
                         ->schema([
-                            Forms\Components\Section::make('Gestione Note')
-                                ->columns([
-                                    'default' => 1,
-                                    'sm' => 1,
-                                    'md' => 2,
-                                    'lg' => 2,
-                                ])
-                                ->description('Aggiungi e gestisci le note della pratica')
+                            Forms\Components\Repeater::make('note')
+                                ->relationship()
                                 ->schema([
-                                    Forms\Components\Repeater::make('note')
-                                        ->relationship()
-                                        ->schema([
-                                            Forms\Components\Grid::make([
-                                                'default' => 1,    // Una colonna su mobile
-                                                'sm' => 1,         // Una colonna su schermi piccoli
-                                                'md' => 2,         // Due colonne su tablet
-                                                'lg' => 2,         // Due colonne su desktop
-                                            ])
-                                                ->schema(static::getNoteSchema()),
-                                        ])
-                                        ->defaultItems(0)
-                                        ->collapsible()
-                                        // Oggetto della nota - Visibilità - Data Creazione
-                                        ->itemLabel(function (array $state): ?string {
-                                            $created_at = (isset($state['created_at'])) ? Carbon::parse($state['created_at'])->format('d/m/Y H:i') : '';
-                                            return $state['oggetto'] . ' - ' . $state['visibilita'] . ' - ' . $created_at;
-                                        })
-                                ]),
+                                    Forms\Components\Grid::make([
+                                        'default' => 1,    // Una colonna su mobile
+                                        'sm' => 1,         // Una colonna su schermi piccoli
+                                        'md' => 2,         // Due colonne su tablet
+                                        'lg' => 2,         // Due colonne su desktop
+                                    ])
+                                        ->schema(static::getNoteSchema()),
+                                ])
+                                ->defaultItems(0)
+                                ->collapsible()
+                                ->collapsed()
+                                // Oggetto della nota - Visibilità - Data Creazione
+                                ->itemLabel(function (array $state): ?string {
+                                    $created_at = (isset($state['created_at'])) ? Carbon::parse($state['created_at'])->format('d/m/Y H:i') : '';
+                                    return $state['oggetto'] . ' - ' . $state['visibilita'] . ' - ' . $created_at;
+                                })
                         ])
                         ->badge(fn($record) => $record?->note()->count() ?? 0),
+
+
+                    // Tab Lavorazioni
+                    Forms\Components\Tabs\Tab::make('Lavorazioni')
+                        ->icon('heroicon-m-cog')
+                        ->schema([
+                            Forms\Components\Repeater::make('lavorazioni')
+                                ->relationship()
+                                ->schema([
+                                    Forms\Components\Grid::make([
+                                        'default' => 1,    // Una colonna su mobile
+                                        'sm' => 1,         // Una colonna su schermi piccoli
+                                        'md' => 2,         // Due colonne su tablet
+                                        'lg' => 2,         // Due colonne su desktop
+                                    ])
+                                        ->schema([
+                                            Forms\Components\Select::make('user_id')
+                                                ->relationship('user', 'name')
+                                                ->required()
+                                                ->searchable()
+                                                ->live()
+                                                ->columnSpanFull(),
+
+                                            Forms\Components\Textarea::make('descrizione')
+                                                ->required()
+                                                ->columnSpanFull(),
+                                        ]),
+                                ])
+                                ->defaultItems(0)
+                                ->collapsible()
+                                ->collapsed()
+                                // Oggetto della nota - Visibilità - Data Creazione
+                                ->itemLabel(function (array $state): ?string {
+                                    $created_at = (isset($state['created_at'])) ? Carbon::parse($state['created_at'])->format('d/m/Y H:i') : '';
+                                    return $state['descrizione'] . ' - ' . $created_at;
+                                })
+                        ])
+                        ->badge(fn($record) => $record?->lavorazioni()->count() ?? 0),
                 ])
                 ->activeTab(1)
                 ->columnSpanFull()
@@ -336,6 +373,7 @@ class PraticaResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

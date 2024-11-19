@@ -13,6 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Log;
 
 class DocumentoResource extends Resource
 {
@@ -28,7 +29,9 @@ class DocumentoResource extends Resource
 
     protected static ?string $navigationGroup = 'Documenti';
 
-    protected static bool $shouldRegisterNavigation = false;
+    // protected static bool $shouldRegisterNavigation = false;
+
+
 
     public static function form(Form $form): Form
     {

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\AnagraficaResource\Pages;
 use App\Filament\Resources\AnagraficaResource\RelationManagers;
 use App\Models\Anagrafica;
+use App\Traits\HasTeamAuthorizationScope;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -23,9 +24,18 @@ class AnagraficaResource extends Resource
     protected static ?string $pluralModelLabel = 'Anagrafiche';
 
     protected static ?string $slug = 'anagrafiche';
-    protected static ?string $navigationGroup = 'Anagrafiche';
+    protected static ?string $navigationGroup = 'Amministrazione';
+
 
     protected static bool $shouldRegisterNavigation = false;
+
+
+    use HasTeamAuthorizationScope;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getAnagraficaBasedQuery();
+    }
 
     public static function form(Form $form): Form
     {

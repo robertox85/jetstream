@@ -6,9 +6,12 @@ use App\Filament\Resources\AssistitoResource\Pages;
 use App\Filament\Resources\AssistitoResource\RelationManagers;
 
 use App\Models\Anagrafica;
+use App\Models\AnagraficaPratica;
 use App\Models\Assistito;
+use App\Models\Pratica;
 use App\Traits\HasAnagraficaForm;
 use App\Traits\HasPraticaForm;
+use App\Traits\HasTeamAuthorizationScope;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -30,7 +33,13 @@ class AssistitoResource extends Resource
     protected static ?string $slug = 'assistiti';
     protected static ?string $navigationGroup = 'Anagrafiche';
 
-    use HasPraticaForm, HasAnagraficaForm;
+    use HasPraticaForm, HasAnagraficaForm, HasTeamAuthorizationScope;
+
+
+    public static function getEloquentQuery(): Builder
+    {
+        return static::getAnagraficaBasedQuery();
+    }
 
     public static function form(Form $form): Form
     {
