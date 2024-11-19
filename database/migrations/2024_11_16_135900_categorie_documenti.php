@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // if not exists
+        if (Schema::hasTable('categorie_documenti')) {
+            return;
+        }
+
         Schema::create('categorie_documenti', function (Blueprint $table) {
             // Chiave primaria autoincrement
             $table->id();

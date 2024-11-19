@@ -74,13 +74,13 @@ trait HasAnagraficaForm
                 ->schema([
                     Forms\Components\TextInput::make('codice_fiscale')
                         ->label('Codice Fiscale')
-                        ->required(fn($get) => $get('tipo_utente') === Anagrafica::TIPO_PERSONA)
+                        // ->required(fn($get) => $get('tipo_utente') === Anagrafica::TIPO_PERSONA)
                         ->maxLength(16)
                         ->unique(ignoreRecord: true),
 
                     Forms\Components\TextInput::make('partita_iva')
                         ->label('Partita IVA')
-                        ->required(fn($get) => $get('tipo_utente') === Anagrafica::TIPO_AZIENDA)
+                        // ->required(fn($get) => $get('tipo_utente') === Anagrafica::TIPO_AZIENDA)
                         ->maxLength(11)
                         ->unique(ignoreRecord: true),
                 ]),
@@ -89,14 +89,14 @@ trait HasAnagraficaForm
                 ->schema([
                     Forms\Components\TextInput::make('email')
                         ->email()
-                        ->required()
+                        // ->required()
                         ->maxLength(255)
                         ->unique(ignoreRecord: true),
 
                     Forms\Components\TextInput::make('pec')
                         ->label('PEC')
                         ->email()
-                        ->required(fn($get) => $get('tipo_utente') === Anagrafica::TIPO_AZIENDA)
+                        // ->required(fn($get) => $get('tipo_utente') === Anagrafica::TIPO_AZIENDA)
                         ->maxLength(255),
                 ]),
 
@@ -175,7 +175,7 @@ trait HasAnagraficaForm
 
             Forms\Components\TextInput::make('email')
                 ->email()
-                ->required()
+                // ->required()
                 ->unique(ignoreRecord: true)
                 ->live(debounce: 500)
                 ->dehydrated(true)

@@ -9,7 +9,7 @@ return [
      * If you want to use your own resource, you can set this to true.
      * and use `php artisan filament-user:publish` to publish the resource.
      */
-    'publish_resource' => false,
+    'publish_resource' => true,
 
     /**
      * ---------------------------------------------
@@ -49,7 +49,7 @@ return [
      * ---------------------------------------------
      * if you want to allow team resource and filters and actions.
      */
-    'teams' => true,
+    'teams' => false,
 
     /**
      * ---------------------------------------------
