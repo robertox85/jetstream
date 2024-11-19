@@ -28,6 +28,8 @@ class LavorazioneResource extends Resource
     protected static ?string $navigationGroup = 'Gestione Pratiche';
     protected static ?int $navigationSort = 3;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     use HasTeamAuthorizationScope;
     use HasPraticaForm;
 

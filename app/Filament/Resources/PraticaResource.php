@@ -291,41 +291,55 @@ class PraticaResource extends Resource
                         Forms\Components\Tabs\Tab::make('Lavorazioni')
                             ->icon('heroicon-m-cog')
                             ->schema([
-                                Forms\Components\Repeater::make('lavorazioni')
-                                    ->relationship()
-                                    ->schema(
-                                        static::getLavorazioniSchema(),
-                                    )
-                                    ->defaultItems(0)
-                                    ->collapsible()
-                                    ->collapsed()
-                                    ->itemLabel(function (array $state): ?string {
-                                        // return descrizoine limited by 30 characters
-                                        return substr($state['descrizione'], 0, 30) . '...';
-                                    })
+                                // Make a Textarea
+                                Forms\Components\RichEditor::make('lavorazione')
+                                    ->label('Descrizione')
+                                    ->placeholder('Inserisci una descrizione')
+                                    ->toolbarButtons([
+                                        'blockquote',
+                                        'bold',
+                                        'bulletList',
+                                        'codeBlock',
+                                        'h2',
+                                        'h3',
+                                        'italic',
+                                        'link',
+                                        'orderedList',
+                                        'redo',
+                                        'strike',
+                                        'underline',
+                                        'undo',
+                                    ])
+                                    ->columnSpanFull(),
 
-                            ])
-                            ->badge(fn($record) => $record?->lavorazioni()->count() ?? 0),
+                            ]),
 
                         // Tab Lavorazioni
                         Forms\Components\Tabs\Tab::make('Contabilità')
                             ->icon('heroicon-o-currency-euro')
                             ->schema([
-                                Forms\Components\Repeater::make('contabilita')
-                                    ->relationship()
-                                    ->schema(
-                                        static::getContabilitaSchema(),
-                                    )
-                                    ->defaultItems(0)
-                                    ->collapsible()
-                                    ->collapsed()
-                                    ->itemLabel(function (array $state): ?string {
-                                        // return tipo and descrizoine limited by 30 characters
-                                        return $state['tipo'] . ' - ' . substr($state['descrizione'], 0, 30) . '...';
-                                    })
-
+                                // Make a Textarea
+                                Forms\Components\RichEditor::make('contabilita')
+                                    ->label('Descrizione')
+                                    ->placeholder('Inserisci una descrizione')
+                                    ->toolbarButtons([
+                                        'blockquote',
+                                        'bold',
+                                        'bulletList',
+                                        'codeBlock',
+                                        'h2',
+                                        'h3',
+                                        'italic',
+                                        'link',
+                                        'orderedList',
+                                        'redo',
+                                        'strike',
+                                        'underline',
+                                        'undo',
+                                    ])
+                                    ->columnSpanFull(),
                             ])
-                            ->badge(fn($record) => $record?->contabilita()->count() ?? 0),
+                        ,
 
                     ])
                     ->activeTab(1)

@@ -33,7 +33,9 @@ class Pratica extends Model
         'altri_riferimenti',
         'priority',
         'data_apertura',
-        'team_id'
+        'team_id',
+        'lavorazione',
+        'contabilita',
     ];
 
     // Cast automatici

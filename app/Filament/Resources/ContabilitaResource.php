@@ -28,6 +28,8 @@ class ContabilitaResource extends Resource
     // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?int $navigationSort = 3;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     use HasTeamAuthorizationScope;
     use HasPraticaForm;
 
