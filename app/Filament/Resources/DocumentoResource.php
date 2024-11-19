@@ -29,7 +29,7 @@ class DocumentoResource extends Resource
 
     protected static ?string $navigationGroup = 'Documenti';
 
-    // protected static bool $shouldRegisterNavigation = false;
+    protected static bool $shouldRegisterNavigation = false;
 
 
 

@@ -8,9 +8,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use function PHPUnit\Framework\containsIdentical;
 
 trait HasPraticaForm
 {
+    use HasTeamUsers;
     protected static function getInformazioniPrincipaliSchema(): array
     {
         return [
@@ -46,7 +48,7 @@ trait HasPraticaForm
                                 ->maxLength(255),
 
                             Forms\Components\Select::make('team_id')
-                                ->relationship('team', 'name', fn ($query) => $query->where('personal_team', false))
+                                ->relationship('team', 'name', fn($query) => $query->where('personal_team', false))
                                 ->required()
                                 ->preload()
                                 ->searchable()
@@ -214,6 +216,78 @@ trait HasPraticaForm
             Forms\Components\Select::make('visibilita')
                 ->options(config('pratica-form.visibilita_note'))
                 ->required(),
+        ];
+    }
+
+    protected static function getLavorazioniSchema($include_owner = false): array
+    {
+        return [
+
+            Forms\Components\Select::make('pratica_id')
+                ->relationship('pratica', 'nome')
+                ->required()
+                ->preload()
+                ->searchable()
+                ->label('Pratica')
+                ->placeholder('Seleziona una pratica')
+                ->visible($include_owner),
+
+            Forms\Components\Select::make('user_id')
+                ->relationship('creator', 'name')
+                ->required()
+                ->preload()
+                ->searchable()
+                ->label('Creatore')
+                ->placeholder('Seleziona un utente')
+                ->options(static::getAllTeamUsers())
+                ->visible($include_owner),
+
+            Forms\Components\DateTimePicker::make('data_inizio'),
+            Forms\Components\DateTimePicker::make('data_fine'),
+            Forms\Components\Textarea::make('descrizione')
+                ->required(),
+        ];
+    }
+
+    protected static function getContabilitaSchema($include_owner = false): array
+    {
+        // data
+        // descrizione
+        // importo (decimale , 2 cifre, in euro)
+        // tipo (entrata/uscita)
+        return [
+
+            Forms\Components\Select::make('pratica_id')
+                ->relationship('pratica', 'nome')
+                ->required()
+                ->preload()
+                ->searchable()
+                ->label('Pratica')
+                ->placeholder('Seleziona una pratica')
+                ->visible($include_owner),
+
+            Forms\Components\Select::make('user_id')
+                ->relationship('creator', 'name')
+                ->required()
+                ->preload()
+                ->searchable()
+                ->label('Creatore')
+                ->placeholder('Seleziona un utente')
+                ->options(static::getAllTeamUsers())
+                ->visible($include_owner),
+
+            Forms\Components\Select::make('tipo')
+                ->required()
+                ->options(config('pratica-form.tipi_contabilita')),
+            Forms\Components\Textarea::make('descrizione')
+                ->required(),
+            Forms\Components\TextInput::make('importo')
+                ->type('number')
+                ->step('0.01')
+                ->validationAttribute('min', '0')
+                ->prefix('€')
+                ->placeholder('0.00'),
+            Forms\Components\DateTimePicker::make('data'),
         ];
     }
 }

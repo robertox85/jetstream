@@ -60,4 +60,11 @@ return [
         'registro_contabile' => 'Registro Contabile',
         'annotazioni' => 'Annotazioni',
     ],
+
+    //entrata
+    //uscita
+    'tipi_contabilita' => [
+        'entrata' => 'Entrata',
+        'uscita' => 'Uscita',
+    ],
 ];

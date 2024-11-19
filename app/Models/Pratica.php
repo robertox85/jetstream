@@ -100,6 +100,18 @@ class Pratica extends Model
             ->withPivotValue('tipo_relazione', 'controparte'); // Aggiunge automaticamente il tipo
     }
 
+    // Relazione con contabilita
+    public function contabilita()
+    {
+        return $this->hasMany(Contabilita::class);
+    }
+
+    // Relazione con lavorazioni
+    public function lavorazioni()
+    {
+        return $this->hasMany(Lavorazione::class);
+    }
+
 // Modifica anche i metodi di utilità
     public function aggiungiAssistito(Assistito $assistito)
     {
