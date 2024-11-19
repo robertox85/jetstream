@@ -9,6 +9,7 @@ use App\Filament\Resources\NotaResource;
 use App\Filament\Resources\PraticaResource;
 use App\Filament\Resources\ScadenzaResource;
 use App\Filament\Resources\UdienzaResource;
+use App\Http\Middleware\CheckIfBanned;
 use App\Models\Anagrafica;
 use Filament\Http\Middleware\Authenticate;
 use BezhanSalleh\FilamentShield\Middleware\SyncShieldTenant;
@@ -127,6 +128,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                CheckIfBanned::class
             ])
             ->plugins([
                 FilamentShieldPlugin::make(),
