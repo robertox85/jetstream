@@ -127,25 +127,21 @@ class UserResource extends Resource
 
 
 
-                // Aggiungi una colonna per lo stato dell'invito
-                Tables\Columns\TextColumn::make('invitation_status')
-                    ->label('Stato invito')
-                    // ->badge()
-                    ->sortable()
-                    ->searchable()
-
-                    // ->color(fn($state) => self::getInvitationStatusColor($state))
-                    ->getStateUsing(fn(User $record) => self::getInvitationStatus($record)),
-
                 // Model_has_ role
-                Tables\Columns\TextColumn::make('roles')
+                Tables\Columns\TextColumn::make('roles.name')
                     ->getStateUsing(fn($record) => $record->roles->pluck('name')->join(', '))
                     ->badge()
                     ->color(fn($state) => self::getRoleColor($state))
                     ->icon('heroicon-o-shield-check')
                     ->label('Ruoli')
-                    ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query
+                            ->leftJoin('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
+                            ->leftJoin('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                            ->orderBy('roles.name', $direction)
+                            ->select('users.*');
+                    }),
 
 
             ])
