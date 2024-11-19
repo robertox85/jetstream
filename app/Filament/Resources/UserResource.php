@@ -300,6 +300,13 @@ class UserResource extends Resource
             return 'info';
         }
 
+        // If String contains 'user'
+        if (strpos($state, 'Amministratore') !== false) {
+            return 'success';
+        }
+
+
+
         return 'warning';
     }
 
