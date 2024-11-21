@@ -15,7 +15,7 @@ class TeamPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_team');
+        return $user->can('view_any_gruppo');
     }
 
     /**
@@ -23,7 +23,7 @@ class TeamPolicy
      */
     public function view(User $user, Team $team): bool
     {
-        return $user->can('view_team');
+        return $user->can('view_gruppo');
     }
 
     /**
@@ -31,7 +31,7 @@ class TeamPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_team');
+        return $user->can('create_gruppo');
     }
 
     /**
@@ -39,7 +39,7 @@ class TeamPolicy
      */
     public function update(User $user, Team $team): bool
     {
-        return $user->can('update_team');
+        return $user->can('update_gruppo');
     }
 
     /**
@@ -47,7 +47,7 @@ class TeamPolicy
      */
     public function delete(User $user, Team $team): bool
     {
-        return $user->can('delete_team');
+        return $user->can('delete_gruppo');
     }
 
     /**
@@ -55,7 +55,7 @@ class TeamPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_team');
+        return $user->can('delete_any_gruppo');
     }
 
     /**
@@ -63,7 +63,7 @@ class TeamPolicy
      */
     public function forceDelete(User $user, Team $team): bool
     {
-        return $user->can('force_delete_team');
+        return $user->can('force_delete_gruppo');
     }
 
     /**
@@ -71,7 +71,7 @@ class TeamPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_team');
+        return $user->can('force_delete_any_gruppo');
     }
 
     /**
@@ -79,7 +79,7 @@ class TeamPolicy
      */
     public function restore(User $user, Team $team): bool
     {
-        return $user->can('restore_team');
+        return $user->can('restore_gruppo');
     }
 
     /**
@@ -87,7 +87,7 @@ class TeamPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_team');
+        return $user->can('restore_any_gruppo');
     }
 
     /**
@@ -95,7 +95,7 @@ class TeamPolicy
      */
     public function replicate(User $user, Team $team): bool
     {
-        return $user->can('replicate_team');
+        return $user->can('replicate_gruppo');
     }
 
     /**
@@ -103,6 +103,6 @@ class TeamPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_team');
+        return $user->can('reorder_gruppo');
     }
 }

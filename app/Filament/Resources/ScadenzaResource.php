@@ -63,6 +63,8 @@ class ScadenzaResource extends Resource
 
     public static function table(Table $table): Table
     {
+
+
         return $table
             ->columns([
                 // data_ora
@@ -70,20 +72,42 @@ class ScadenzaResource extends Resource
                 // stato
                 // pratica_id
 
+                // Nome pratica
+                Tables\Columns\TextColumn::make('pratica.nome')
+                    ->label('Pratica')
+                    ->searchable()
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('data_ora')
                     ->label('Data e Ora')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable()
+                    ->date('d/m/Y H:i'),
+
                 Tables\Columns\TextColumn::make('motivo')
-                    ->label('Motivo')
+                    ->limit(20)
+                    ->sortable()
+                    ->toggleable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('luogo')
+                    ->sortable()
+                    ->toggleable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('pratica_id')
-                    ->label('Pratica')
+                    ->label('Nr. Pratica')
                     ->searchable()
-                ->getStateUsing(fn ($record) => $record->pratica->numero_pratica ?? 'N/A'),
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                    ->getStateUsing(fn ($record) => $record->pratica->numero_pratica ?? 'N/A'),
 
                 Tables\Columns\TextColumn::make('stato')
                     ->label('Stato')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable()
                     ->badge()
                     ->color(fn($record) => match ($record->stato) {
                         'in_corso' => 'info',

@@ -98,15 +98,19 @@ class NotaResource extends Resource
                 Tables\Columns\TextColumn::make('oggetto')
                     ->limit(30)
                     ->searchable()
+                    ->toggleable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('tipologia')
                     ->searchable()
+                    ->toggleable()
                     ->sortable(),
 
 
                 Tables\Columns\TextColumn::make('pratica_id')
                     ->label('Nr. Pratica')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
                     ->getStateUsing(function ($record) {
                         $pratica_id = $record->pratica_id;
                         return Pratica::find($pratica_id)->numero_pratica ?? 'N/A';
@@ -116,6 +120,7 @@ class NotaResource extends Resource
 
                 Tables\Columns\TextColumn::make('visibilita')
                     ->badge()
+                    ->toggleable()
                     ->color(fn($record) => match ($record->visibilita) {
                         'pubblica' => 'success',
                         'privata' => 'danger',

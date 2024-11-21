@@ -46,7 +46,7 @@ return new class extends Migration {
             $table->string('cellulare')->nullable();
 
             // Indirizzi email
-            $table->string('email')->unique();
+            $table->string('email')->unique()->nullable();
             $table->string('pec')->nullable();
 
             // DATI FISCALI

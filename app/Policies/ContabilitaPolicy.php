@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Anagrafica;
+use App\Models\Contabilita;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class AnagraficaPolicy
+class ContabilitaPolicy
 {
     use HandlesAuthorization;
 
@@ -15,15 +15,15 @@ class AnagraficaPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_anagrafica');
+        return $user->can('view_any_contabilita');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Anagrafica $anagrafica): bool
+    public function view(User $user, Contabilita $contabilita): bool
     {
-        return $user->can('view_anagrafica');
+        return $user->can('view_contabilita');
     }
 
     /**
@@ -31,23 +31,23 @@ class AnagraficaPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_anagrafica');
+        return $user->can('create_contabilita');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Anagrafica $anagrafica): bool
+    public function update(User $user, Contabilita $contabilita): bool
     {
-        return $user->can('update_anagrafica');
+        return $user->can('update_contabilita');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Anagrafica $anagrafica): bool
+    public function delete(User $user, Contabilita $contabilita): bool
     {
-        return $user->can('delete_anagrafica');
+        return $user->can('delete_contabilita');
     }
 
     /**
@@ -55,15 +55,15 @@ class AnagraficaPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_anagrafica');
+        return $user->can('delete_any_contabilita');
     }
 
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Anagrafica $anagrafica): bool
+    public function forceDelete(User $user, Contabilita $contabilita): bool
     {
-        return $user->can('force_delete_anagrafica');
+        return $user->can('force_delete_contabilita');
     }
 
     /**
@@ -71,15 +71,15 @@ class AnagraficaPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_anagrafica');
+        return $user->can('force_delete_any_contabilita');
     }
 
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Anagrafica $anagrafica): bool
+    public function restore(User $user, Contabilita $contabilita): bool
     {
-        return $user->can('restore_anagrafica');
+        return $user->can('restore_contabilita');
     }
 
     /**
@@ -87,15 +87,15 @@ class AnagraficaPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_anagrafica');
+        return $user->can('restore_any_contabilita');
     }
 
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Anagrafica $anagrafica): bool
+    public function replicate(User $user, Contabilita $contabilita): bool
     {
-        return $user->can('replicate_anagrafica');
+        return $user->can('replicate_contabilita');
     }
 
     /**
@@ -103,6 +103,6 @@ class AnagraficaPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_anagrafica');
+        return $user->can('reorder_contabilita');
     }
 }

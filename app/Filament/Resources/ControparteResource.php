@@ -15,6 +15,7 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -47,7 +48,7 @@ class ControparteResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema(static::getAnagraficaFormSchema(false));
+            ->schema(static::getAnagraficaFormSchema(true, 'controparte'));
     }
 
     public static function table(Table $table): Table
@@ -58,24 +59,122 @@ class ControparteResource extends Resource
                     ->label('Nome/Denominazione')
                     ->searchable(['nome', 'cognome', 'denominazione'])
                     ->sortable(),
-                Tables\Columns\TextColumn::make('type')
-                    ->label('Tipo')
-                    ->badge()
-                    ->colors([
-                        'primary' => 'controparte',
-                        'success' => 'assistito',
-                    ]),
-                Tables\Columns\TextColumn::make('pratiche.nome')
-                    ->label('Pratiche')
+
+
+                TextColumn::make('tipo_utente')
+                    ->label('Tipo Utente')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                ,
+
+                TextColumn::make('denominazione')
                     ->searchable()
-                    ->badge()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('email')
+                    ->toggleable()
+                    ->sortable()
+                    ->toggledHiddenByDefault()
+                ,
+
+                // Dati personali
+                TextColumn::make('nome')
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('telefono')
+                    ->toggleable()
+                    ->sortable()
+                    ->toggledHiddenByDefault()
+                ,
+
+                TextColumn::make('cognome')
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggledHiddenByDefault()
+                    ->sortable()
+                    ->toggleable()
+                ,
+
+                // Indirizzo
+                TextColumn::make('indirizzo')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                ,
+
+                TextColumn::make('codice_postale')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                ,
+
+                TextColumn::make('citta')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                ,
+
+                TextColumn::make('provincia')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                ,
+
+                // Contatti
+                TextColumn::make('telefono')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                ,
+
+                TextColumn::make('cellulare')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                ,
+
+                TextColumn::make('email')
+                    ->searchable()
+                    ->toggledHiddenByDefault()
+                    ->toggleable()
+                ,
+
+                TextColumn::make('pec')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                ,
+
+                // Dati fiscali
+                TextColumn::make('codice_fiscale')
+                    ->searchable()
+                    ->toggledHiddenByDefault()
+                    ->toggleable()
+                ,
+
+                TextColumn::make('partita_iva')
+                    ->searchable()
+                    ->toggledHiddenByDefault()
+                    ->toggleable()
+                ,
+
+                TextColumn::make('codice_univoco_destinatario')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                ,
+
+                // Altri dati
+                TextColumn::make('nota')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                    ->limit(10)
+                    ->wrap(),
+
+                // Timestamp
+                TextColumn::make('created_at')
+                    ->label('Data Creazione')
+                    ->dateTime('d/m/Y H:i')
+                    ->toggleable()
+                    ->toggledHiddenByDefault(),
+
+                TextColumn::make('updated_at')
+                    ->label('Ultima Modifica')
+                    ->dateTime('d/m/Y H:i')
+                    ->toggleable()
+                    ->toggledHiddenByDefault(),
+
+                TextColumn::make('deleted_at')
+                    ->label('Data Cancellazione')
+                    ->dateTime('d/m/Y H:i')
+                    ->toggleable()
+                    ->toggledHiddenByDefault(),
             ])
             ->filters([
                 //

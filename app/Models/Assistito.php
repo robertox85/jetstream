@@ -37,6 +37,7 @@ class Assistito extends Anagrafica
         )
             ->withPivot('tipo_relazione')
             ->withTimestamps()
-            ->wherePivot('tipo_relazione', 'assistito');
+            ->wherePivot('tipo_relazione', self::TYPE_ASSISTITO)
+            ->withPivotValue('tipo_relazione', self::TYPE_ASSISTITO);
     }
 }

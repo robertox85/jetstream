@@ -102,6 +102,7 @@ class GruppoResource extends Resource
 
                 Tables\Columns\TextColumn::make('responsabile')
                     ->label('Responsabile')
+                    ->toggleable()
                     ->getStateUsing(function ($record): string {
                         if (!$record->user_id) {
                             return 'N/D';
@@ -127,20 +128,24 @@ class GruppoResource extends Resource
                 Tables\Columns\TextColumn::make('pratiche.numero_pratica')
                     ->label('Pratiche')
                     ->searchable()
-                    ->badge()
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
                     ->sortable(),
 
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Creato il')
-                    ->dateTime()
+                    ->searchable()
                     ->sortable()
+                    ->toggleable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                // TODO: Implementare i filtri
                 Tables\Filters\SelectFilter::make('owner')
                     ->relationship('owner', 'name')
-                    ->label('Filtra per Responsabile'),
+                    ->label('Filtra per Responsabile')
+
             ])
             ->actions([
 

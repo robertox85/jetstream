@@ -108,6 +108,7 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            // Personalizza l'azione di toggle
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
@@ -116,16 +117,15 @@ class UserResource extends Resource
 
                 Tables\Columns\TextColumn::make('email')
                     ->searchable()
+                    ->toggleable()
                     ->sortable(),
 
                 // Teams
                 Tables\Columns\TextColumn::make('teams')
                     ->getStateUsing(fn($record) => self::getUserTeams($record))
                     ->label('Gruppi')
-                    ->sortable()
-                    ->searchable(),
-
-
+                    ->toggleable()
+                    ->sortable(),
 
                 // Model_has_ role
                 Tables\Columns\TextColumn::make('roles.name')
@@ -135,6 +135,7 @@ class UserResource extends Resource
                     ->icon('heroicon-o-shield-check')
                     ->label('Ruoli')
                     ->searchable()
+                    ->toggleable()
                     ->sortable(query: function (Builder $query, string $direction): Builder {
                         return $query
                             ->leftJoin('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
@@ -142,6 +143,27 @@ class UserResource extends Resource
                             ->orderBy('roles.name', $direction)
                             ->select('users.*');
                     }),
+
+                Tables\Columns\TextColumn::make('email_verified_at')
+                    ->label('Verificato')
+                    ->getStateUsing(fn($record) => $record->email_verified_at ? 'Sì' : 'No')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('is_banned')
+                    ->label('Stato')
+                    ->getStateUsing(fn($record) => self::getInvitationStatus($record))
+                    ->color(fn($state) => self::getInvitationStatusColor($state))
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Creato il')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
 
             ])

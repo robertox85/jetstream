@@ -4,13 +4,11 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\Assistito;
-use App\Policies\Traits\HasPermission;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class AssistitoPolicy
 {
     use HandlesAuthorization;
-    use HasPermission;
 
     /**
      * Determine whether the user can view any models.

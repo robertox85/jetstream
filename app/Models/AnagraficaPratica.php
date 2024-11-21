@@ -22,6 +22,7 @@ class AnagraficaPratica extends Model
     // Abilita soft delete
     use SoftDeletes;
 
+    // Relazione con il modello Pratica
     public function pratica()
     {
         return $this->belongsTo(Pratica::class);

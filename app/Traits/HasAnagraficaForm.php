@@ -10,19 +10,27 @@ use Illuminate\Support\Facades\Storage;
 
 trait HasAnagraficaForm
 {
-    public static function getAnagraficaFormSchema(bool $includeType = false): array
+    public static function getAnagraficaFormSchema(bool $includeType = false, $type="assistito"): array
     {
         $schema = [];
 
         if ($includeType) {
             $schema[] = Forms\Components\Grid::make(2)
                 ->schema([
-                    Forms\Components\Select::make('type')
-                        ->label('Tipologia Anagrafica')
-                        ->options([
-                            Anagrafica::TYPE_CONTROPARTE => 'Controparte',
-                            Anagrafica::TYPE_ASSISTITO => 'Assistito',
-                        ])
+                   //Forms\Components\Select::make('type')
+                   //    ->label('Tipologia Anagrafica')
+                   //    ->options([
+                   //        Anagrafica::TYPE_CONTROPARTE => 'Controparte',
+                   //        Anagrafica::TYPE_ASSISTITO => 'Assistito',
+                   //    ])
+                   //    ->required()
+                   //    ->default($type)
+                   //    ->native(false),
+
+                    // if i'm in 'Controrparte' view, i want to show the 'pratica_id' field
+                    Forms\Components\Select::make('pratica_id')
+                        ->label('Pratica')
+                        ->relationship('pratiche', 'numero_pratica')
                         ->required()
                         ->native(false),
 
@@ -34,6 +42,7 @@ trait HasAnagraficaForm
                         ])
                         ->required()
                         ->live()
+
                         ->native(false),
                 ]);
         } else {
