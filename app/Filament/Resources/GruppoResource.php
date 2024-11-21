@@ -142,9 +142,9 @@ class GruppoResource extends Resource
             ])
             ->filters([
                 // TODO: Implementare i filtri
-                Tables\Filters\SelectFilter::make('owner')
-                    ->relationship('owner', 'name')
-                    ->label('Filtra per Responsabile')
+               // Tables\Filters\SelectFilter::make('owner')
+               //     ->relationship('owner', 'name')
+               //     ->label('Filtra per Responsabile')
 
             ])
             ->actions([
