@@ -55,6 +55,20 @@ class ControparteResource extends Resource
     {
         return $table
             ->columns([
+
+                Tables\Columns\TextColumn::make('pratica.nome')
+                    ->label('Nome Pratica')
+                    ->getStateUsing(function ($record) {
+                        // get from pivot table
+                        $pratica = $record->pratiche->first();
+                        if ($pratica) {
+                            return $pratica->nome;
+                        }
+                        return null;
+                    })
+                    ->searchable()
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('nome_completo')
                     ->label('Nome/Denominazione')
                     ->searchable(['nome', 'cognome', 'denominazione'])

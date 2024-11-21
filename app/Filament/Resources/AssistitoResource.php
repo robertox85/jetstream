@@ -59,7 +59,10 @@ class AssistitoResource extends Resource
                     ->getStateUsing(function ($record) {
                         // get from pivot table
                         $pratica = $record->pratiche->first();
-                        return $pratica->nome;
+                        if ($pratica) {
+                            return $pratica->nome;
+                        }
+                        return null;
                     })
                     ->searchable()
                     ->sortable(),
