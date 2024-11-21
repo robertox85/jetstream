@@ -70,7 +70,7 @@ class ControparteResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('nome_completo')
-                    ->label('Nome/Denominazione')
+                    ->label('Nome Completo')
                     ->searchable(['nome', 'cognome', 'denominazione'])
                     ->sortable(),
 
@@ -83,8 +83,8 @@ class ControparteResource extends Resource
 
                 TextColumn::make('denominazione')
                     ->searchable()
-                    ->toggleable()
                     ->sortable()
+                    ->toggleable()
                     ->toggledHiddenByDefault()
                 ,
 
@@ -98,9 +98,9 @@ class ControparteResource extends Resource
 
                 TextColumn::make('cognome')
                     ->searchable()
-                    ->toggledHiddenByDefault()
                     ->sortable()
                     ->toggleable()
+                    ->toggledHiddenByDefault()
                 ,
 
                 // Indirizzo
@@ -137,8 +137,8 @@ class ControparteResource extends Resource
 
                 TextColumn::make('email')
                     ->searchable()
-                    ->toggledHiddenByDefault()
                     ->toggleable()
+
                 ,
 
                 TextColumn::make('pec')
@@ -149,14 +149,14 @@ class ControparteResource extends Resource
                 // Dati fiscali
                 TextColumn::make('codice_fiscale')
                     ->searchable()
-                    ->toggledHiddenByDefault()
                     ->toggleable()
+                    ->toggledHiddenByDefault()
                 ,
 
                 TextColumn::make('partita_iva')
                     ->searchable()
-                    ->toggledHiddenByDefault()
                     ->toggleable()
+                    ->toggledHiddenByDefault()
                 ,
 
                 TextColumn::make('codice_univoco_destinatario')
@@ -167,7 +167,7 @@ class ControparteResource extends Resource
                 // Altri dati
                 TextColumn::make('nota')
                     ->toggleable()
-                    ->toggledHiddenByDefault()
+
                     ->limit(10)
                     ->wrap(),
 

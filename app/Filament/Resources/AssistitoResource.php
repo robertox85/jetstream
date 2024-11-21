@@ -81,24 +81,24 @@ class AssistitoResource extends Resource
 
                 TextColumn::make('denominazione')
                     ->searchable()
-                    ->toggleable()
                     ->sortable()
+                    ->toggleable()
                     ->toggledHiddenByDefault()
                 ,
 
                 // Dati personali
                 TextColumn::make('nome')
                     ->searchable()
-                    ->toggleable()
                     ->sortable()
+                    ->toggleable()
                     ->toggledHiddenByDefault()
                 ,
 
                 TextColumn::make('cognome')
                     ->searchable()
-                    ->toggledHiddenByDefault()
                     ->sortable()
                     ->toggleable()
+                    ->toggledHiddenByDefault()
                 ,
 
                 // Indirizzo
@@ -135,8 +135,8 @@ class AssistitoResource extends Resource
 
                 TextColumn::make('email')
                     ->searchable()
-                    ->toggledHiddenByDefault()
                     ->toggleable()
+
                 ,
 
                 TextColumn::make('pec')
@@ -147,14 +147,14 @@ class AssistitoResource extends Resource
                 // Dati fiscali
                 TextColumn::make('codice_fiscale')
                     ->searchable()
-                    ->toggledHiddenByDefault()
                     ->toggleable()
+                    ->toggledHiddenByDefault()
                 ,
 
                 TextColumn::make('partita_iva')
                     ->searchable()
-                    ->toggledHiddenByDefault()
                     ->toggleable()
+                    ->toggledHiddenByDefault()
                 ,
 
                 TextColumn::make('codice_univoco_destinatario')
@@ -165,7 +165,7 @@ class AssistitoResource extends Resource
                 // Altri dati
                 TextColumn::make('nota')
                     ->toggleable()
-                    ->toggledHiddenByDefault()
+
                     ->limit(10)
                     ->wrap(),
 
