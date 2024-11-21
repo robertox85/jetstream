@@ -69,6 +69,21 @@ class ControparteResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('pratica.numero_pratica')
+                    ->label('Numero Pratica')
+                    ->getStateUsing(function ($record) {
+                        // get from pivot table
+                        $pratica = $record->pratiche->first();
+                        if ($pratica) {
+                            return $pratica->numero_pratica;
+                        }
+                        return null;
+                    })
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable()
+                    ->toggledHiddenByDefault(),
+
                 Tables\Columns\TextColumn::make('nome_completo')
                     ->label('Nome Completo')
                     ->searchable(['nome', 'cognome', 'denominazione'])
