@@ -87,6 +87,9 @@ class NotaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')  // Ordinamento singolo
+            ->paginated([100, 150, 'all'])
+            ->defaultPaginationPageOption(100)
             ->columns([
 
                 // Nome pratica
@@ -129,7 +132,22 @@ class NotaResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
+                Tables\Filters\SelectFilter::make('pratica_id')
+                    ->label('Pratica')
+                    ->options(
+                        Pratica::all()->pluck('numero_pratica', 'id')
+                    )
+                    ->searchable(),
+                Tables\Filters\SelectFilter::make('tipologia')
+                    ->label('Tipologia')
+                    ->options(config('pratica-form.tipologie_note'))
+                    ->searchable(),
+                Tables\Filters\SelectFilter::make('visibilita')
+                    ->label('Visibilità')
+                    ->options(config('pratica-form.visibilita_note'))
+                    ->searchable(),
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

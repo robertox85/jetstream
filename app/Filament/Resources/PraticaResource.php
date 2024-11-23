@@ -22,12 +22,14 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use function Livewire\wrap;
 
 class PraticaResource extends Resource
 {
@@ -349,12 +351,31 @@ class PraticaResource extends Resource
 
     public static function table(Table $table): Table
     {
+
+   //  'numero_pratica',
+   //  'nome',
+   //  'tipologia',
+   //  'competenza',
+   //  'ruolo_generale',
+   //  'giudice',
+   //  'stato',
+   //  'altri_riferimenti',
+
+   //  'data_apertura',
+   //  'team_id',
+   //  'lavorazione',
+   //  'contabilita',
         return $table
+            ->defaultSort('numero_pratica', 'asc')  // Ordinamento singolo
+            ->paginated([100, 150, 'all'])
+            ->defaultPaginationPageOption(100)
             ->columns([
                 Tables\Columns\TextColumn::make('numero_pratica')
                     ->label('Numero Pratica')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query->orderByTeamENumero($direction);
+                    }),
                 Tables\Columns\TextColumn::make('nome')
                     ->label('Nome')
                     ->searchable()
@@ -363,6 +384,66 @@ class PraticaResource extends Resource
                     ->label('Tipologia')
                     ->searchable()
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('competenza')
+                    ->label('Competenza')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('ruolo_generale')
+                    ->label('Ruolo Generale')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('giudice')
+                    ->label('Giudice')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('stato')
+                    ->label('Stato')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('altri_riferimenti')
+                    ->label('Altri Riferimenti')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                    ->searchable()
+                    ->wrap()
+                    ->limit(20)
+                    ->sortable(),
+
+
+                Tables\Columns\TextColumn::make('lavorazione')
+                    ->label('Lavorazione')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                    ->searchable()
+                    ->wrap()
+                    ->html()
+                    ->limit(50)
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('contabilita')
+                    ->label('Contabilità')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                    ->searchable()
+                    ->wrap()
+                    ->html()
+                    ->limit(50)
+                    ->sortable(),
+
+
 
                 Tables\Columns\TextColumn::make('team_id')
                     ->getStateUsing(function ($record) {
@@ -378,15 +459,38 @@ class PraticaResource extends Resource
                     ->searchable(),
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
+
+                Tables\Filters\SelectFilter::make('team_id')
+                    ->label('Gruppo')
+                    ->options(
+                        Team::all()->pluck('name', 'id')
+                    )
+                    ->searchable(),
+
+                Tables\Filters\SelectFilter::make('tipologia')
+                    ->label('Tipologia')
+                    ->options(config('pratica-form.tipologie'))
+                    ->preload()
+                    ->searchable(),
+
+                Tables\Filters\SelectFilter::make('stato')
+                    ->label('Stato')
+                    ->options(config('pratica-form.stati'))
+                    ->preload()
+                    ->searchable(),
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+                Tables\Actions\RestoreAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
                 ]),
             ]);
     }

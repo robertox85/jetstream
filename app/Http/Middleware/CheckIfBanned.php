@@ -15,6 +15,7 @@ class CheckIfBanned
     public function handle(Request $request, Closure $next)
     {
         Log::info('CheckIfBanned middleware is running');
+
         if (Auth::check() && Auth::user()->is_banned) {
 
             Auth::logout();

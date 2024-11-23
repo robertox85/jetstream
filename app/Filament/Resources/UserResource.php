@@ -10,18 +10,24 @@ use App\Traits\HasTeamAuthorizationScope;
 use Exception;
 use Filament\Facades\Filament;
 use Filament\Forms;
+use Filament\Forms\Components\Actions\Action;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Notifications\Auth\ResetPassword as ResetPasswordNotification;
+use Filament\Pages\Actions\Modal\Actions\ButtonAction;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Laravel\Jetstream\TeamInvitation;
 use TomatoPHP\FilamentUsers\Resources\UserResource\Table\Actions\ImpersonateAction;
+
 
 class UserResource extends Resource
 {
@@ -101,13 +107,34 @@ class UserResource extends Resource
                             ->preload()
                         ,
 
+
+                        TextInput::make('password')
+                            ->label('Password')
+                            ->password()
+                            ->revealable()
+                            ->maxLength(255)
+                            ->required(fn($livewire) => $livewire instanceof Pages\CreateUser)
+                            ->dehydrateStateUsing(fn($state) => !empty($state) ? Hash::make($state) : null)
+                            ->dehydrated(fn($state) => !empty($state)),
+
+
+                        Forms\Components\Toggle::make('is_banned')
+                            ->label('Disabilitato')
+                            ->columnSpanFull()
+                            ->helperText('Disabilita l\'utente')
+
+
                     ]),
             ]);
     }
 
+
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')  // Ordinamento singolo
+            ->paginated([100, 150, 'all'])
+            ->defaultPaginationPageOption(100)
             // Personalizza l'azione di toggle
             ->columns([
                 Tables\Columns\TextColumn::make('name')
@@ -125,7 +152,7 @@ class UserResource extends Resource
                     ->getStateUsing(fn($record) => self::getUserTeams($record))
                     ->label('Gruppi')
                     ->toggleable()
-                    ->sortable(),
+                ,
 
                 // Model_has_ role
                 Tables\Columns\TextColumn::make('roles.name')
@@ -136,13 +163,7 @@ class UserResource extends Resource
                     ->label('Ruoli')
                     ->searchable()
                     ->toggleable()
-                    ->sortable(query: function (Builder $query, string $direction): Builder {
-                        return $query
-                            ->leftJoin('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
-                            ->leftJoin('roles', 'model_has_roles.role_id', '=', 'roles.id')
-                            ->orderBy('roles.name', $direction)
-                            ->select('users.*');
-                    }),
+                    ->sortable(query: fn(Builder $query, string $direction) => $query->orderByRoleImportance($direction)),
 
                 Tables\Columns\TextColumn::make('email_verified_at')
                     ->label('Verificato')
@@ -168,7 +189,131 @@ class UserResource extends Resource
 
             ])
             ->filters([
-                //
+                // Tables\Filters\TrashedFilter::make(),
+                Tables\Filters\SelectFilter::make('roles')
+                    ->label('Ruoli')
+                    ->preload() // Carica i dati iniziali
+                    ->options(
+                        function () {
+                            // remove super_admin and Amministratore roles
+                            return \App\Models\Role::where('name', '!=', 'super_admin')->where('name', '!=', 'Amministratore')->get()->pluck('name', 'name');
+                        }
+                    )
+                    ->query(function (Builder $query, array $data) {
+                        return $query->when(
+                            $data['values'],
+                            fn(Builder $query, array $values) => $query->whereHas(
+                                'roles',
+                                fn($query) => $query->whereIn('name', $values)
+                            )
+                        );
+                    })
+                    ->visible(fn() => auth()->user()->hasRole(['super_admin', 'Amministratore'])) // Visibile solo per super_admin
+                    ->searchable()
+                    ->multiple(),
+
+                Tables\Filters\SelectFilter::make('teams')
+                    ->label('Gruppi')
+                    ->preload() // Carica i dati iniziali
+                    ->options(
+                        function () {
+                            $teams = Team::all()->pluck('name', 'name');
+
+                            // add also empty value
+                            $teams->prepend('Nessun gruppo', 'none');
+
+                            return $teams;
+                        }
+                    )
+                    ->query(function (Builder $query, array $data) {
+                        if (empty($data['values'])) {
+                            return $query;
+                        }
+
+                        return $query->where(function ($query) use ($data) {
+                            foreach ($data['values'] as $value) {
+                                if ($value === 'none') {
+                                    $query->orWhereDoesntHave('teams');
+                                } else {
+                                    $query->orWhereHas('teams', fn($q) => $q->where('name', $value));
+                                }
+                            }
+                        });
+                    })
+                    ->searchable()
+                    ->multiple(),
+
+                Tables\Filters\SelectFilter::make('is_banned')
+                    ->label('Stato')
+                    ->options([
+                        'Attivo' => 'Attivo',
+                        'Disabilitato' => 'Disabilitato',
+                        'Da assegnare a un gruppo' => 'Da assegnare a un gruppo',
+                        'In attesa di accettazione' => 'In attesa di accettazione',
+                        'Non invitato' => 'Non invitato',
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        if (empty($data['values'])) {
+                            return $query;
+                        }
+
+                        return $query->where(function ($query) use ($data) {
+                            foreach ($data['values'] as $status) {
+                                switch ($status) {
+                                    case 'Disabilitato':
+                                        $query->orWhere('is_banned', true);
+                                        break;
+
+                                    case 'Da assegnare a un gruppo':
+                                        $query->orWhere(function ($q) {
+                                            $q->whereDoesntHave('teams')
+                                                ->whereDoesntHave('ownedTeams')
+                                                ->whereDoesntHave('roles', function ($q) {
+                                                    $q->whereIn('name', ['super_admin', 'Amministratore']);
+                                                });
+                                        });
+                                        break;
+
+                                    case 'In attesa di accettazione':
+                                        $query->orWhereExists(function ($q) {
+                                            $q->select(DB::raw(1))
+                                                ->from('team_invitations')
+                                                ->whereColumn('team_invitations.email', 'users.email');
+                                        });
+                                        break;
+
+                                    case 'Attivo':
+                                        $query->orWhere(function ($q) {
+                                            $q->whereNotNull('email_verified_at')
+                                                ->where('is_banned', false)
+                                                ->where(function ($q) {
+                                                    $q->whereHas('teams')
+                                                        ->orWhereHas('ownedTeams')
+                                                        ->orWhereHas('roles', function ($q) {
+                                                            $q->whereIn('name', ['super_admin', 'Amministratore']);
+                                                        });
+                                                });
+                                        });
+                                        break;
+
+                                    case 'Non invitato':
+                                        $query->orWhere(function ($q) {
+                                            $q->whereNull('email_verified_at')
+                                                ->where('is_banned', false)
+                                                ->whereNotExists(function ($sq) {
+                                                    $sq->select(DB::raw(1))
+                                                        ->from('team_invitations')
+                                                        ->whereColumn('team_invitations.email', 'users.email');
+                                                });
+                                        });
+                                        break;
+                                }
+                            }
+                        });
+                    })
+                    ->searchable()
+                    ->multiple(),
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->label('')->size('md'),
@@ -250,29 +395,29 @@ class UserResource extends Resource
     static function getInvitationStatus($record): string
     {
         // IF admin or super_admin
-        if ($record->roles->contains('name', 'super_admin') || $record->roles->contains('name', 'Amministratore')) {
-            return '';
-        }
+       if ($record->roles->contains('name', 'super_admin') || $record->roles->contains('name', 'Amministratore')) {
+           return '';
+       }
 
 
-        if ($record->is_banned) {
-            return 'Utente disabilitato';
-        }
+       if ($record->is_banned) {
+           return 'Utente disabilitato';
+       }
 
-        // is not Owner of any team
-        if ($record->teams->count() == 0 && $record->ownedTeams->count() == 0) {
-            return 'Da assegnare a un gruppo';
-        }
+       // // is not Owner of any team
+       if ($record->teams->count() == 0 && $record->ownedTeams->count() == 0) {
+           return 'Da assegnare a un gruppo';
+       }
 
-        if (TeamInvitation::where('email', $record->email)->exists()) {
-            return 'In attesa';
-        }
+       if (TeamInvitation::where('email', $record->email)->exists()) {
+              return 'In attesa di accettazione';
+       }
 
-        if ($record->email_verified_at) {
-            return 'Attivo';
-        }
+       if ($record->email_verified_at) {
+           return 'Attivo';
+       }
 
-        return 'Non invitato';
+       return 'Non invitato';
     }
 
     static function getInvitationStatusColor($value): string
@@ -328,7 +473,6 @@ class UserResource extends Resource
         }
 
 
-
         return 'warning';
     }
 
@@ -343,7 +487,7 @@ class UserResource extends Resource
             return $ownedTeams . ' (Proprietario)' . ($memberTeams ? ' | ' . $memberTeams : '');
         }
 
-        return $memberTeams ?: 'Nessun team associato';
+        return $memberTeams ?: 'Nessun gruppo';
 
     }
 }

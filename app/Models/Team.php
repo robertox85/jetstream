@@ -93,4 +93,11 @@ class Team extends JetstreamTeam
     {
         return $this->hasMany(Pratica::class);
     }
+
+    public function scopeOrderByPraticheCount($query, $direction = 'asc')
+    {
+        return $query->orderByRaw(
+            "(SELECT count(*) FROM pratiche WHERE team_id = teams.id) {$direction}"
+        );
+    }
 }

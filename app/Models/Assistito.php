@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class Assistito extends Anagrafica
 {
+
     protected static function boot()
     {
         parent::boot();
@@ -27,6 +28,16 @@ class Assistito extends Anagrafica
         return $query->where('type', self::TYPE_ASSISTITO);
     }
 
+    protected function scopeOrderByNomeCompleto($query, $direction = 'asc')
+    {
+        return $query->orderByRaw("
+        CASE 
+            WHEN tipo_utente = ? THEN CONCAT(COALESCE(nome, ''), ' ', COALESCE(cognome, ''))
+            ELSE COALESCE(denominazione, '')
+        END {$direction}
+    ", [Anagrafica::TIPO_PERSONA]);
+    }
+
     public function pratiche(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -39,5 +50,20 @@ class Assistito extends Anagrafica
             ->withTimestamps()
             ->wherePivot('tipo_relazione', self::TYPE_ASSISTITO)
             ->withPivotValue('tipo_relazione', self::TYPE_ASSISTITO);
+    }
+
+
+
+    public function pratica(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Pratica::class,
+            'anagrafica_pratica',
+            'anagrafica_id',
+            'pratica_id'
+        )
+            ->withPivot('tipo_relazione')
+            ->withTimestamps()
+            ->wherePivot('tipo_relazione', self::TYPE_ASSISTITO);
     }
 }

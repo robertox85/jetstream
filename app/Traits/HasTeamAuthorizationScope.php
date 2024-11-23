@@ -5,6 +5,7 @@ namespace App\Traits;
 use App\Models\AnagraficaPratica;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Pratica;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Collection;
 
 trait HasTeamAuthorizationScope
@@ -90,7 +91,9 @@ trait HasTeamAuthorizationScope
     public static function getTeamBasedQuery(): Builder
     {
         $user = auth()->user();
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()->withoutGlobalScopes([
+            SoftDeletingScope::class,
+        ]);
 
         if ($user->hasRole(['super_admin', 'Amministratore'])) {
             return $query;
@@ -230,8 +233,11 @@ trait HasTeamAuthorizationScope
         $user = auth()->user();
         $query = parent::getEloquentQuery();
 
+
+
         // Super admin view all users
         if ($user->hasRole(['super_admin'])) {
+
             return $query;
         }
 

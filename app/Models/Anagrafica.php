@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class Anagrafica extends Model
 {
@@ -108,6 +113,10 @@ class Anagrafica extends Model
 
     // VALIDAZIONI
 
+    protected static function  booted()
+    {
+
+    }
     protected static function boot()
     {
         parent::boot();
@@ -135,7 +144,19 @@ class Anagrafica extends Model
                 ->update(['deleted_at' => null]);
         });
 
+
         static::saving(function ($anagrafica) {
+
+            $esiste = static::where('nome', $anagrafica->nome)
+                ->where('cognome', $anagrafica->cognome)
+                ->where('denominazione', $anagrafica->denominazione)
+                ->where('id', '!=', $anagrafica->id)
+                ->exists();
+
+            if ($esiste) {
+                throw new \Exception('Anagrafica già esistente');
+            }
+
             // Validazione codice fiscale
             if ($anagrafica->codice_fiscale) {
                 $anagrafica->codice_fiscale = strtoupper($anagrafica->codice_fiscale);
@@ -162,6 +183,7 @@ class Anagrafica extends Model
         return true;
 
         $cf = strtoupper($cf);
+
         if (strlen($cf) != 16) {
             return false;
         }
@@ -210,5 +232,4 @@ class Anagrafica extends Model
 
         return true;
     }
-
 }

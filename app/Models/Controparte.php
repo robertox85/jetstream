@@ -27,6 +27,18 @@ class Controparte extends Anagrafica
         return $query->where('type', self::TYPE_CONTROPARTE);
     }
 
+
+    protected function scopeOrderByNomeCompleto($query, $direction = 'asc')
+    {
+        return $query->orderByRaw("
+        CASE 
+            WHEN tipo_utente = ? THEN CONCAT(COALESCE(nome, ''), ' ', COALESCE(cognome, ''))
+            ELSE COALESCE(denominazione, '')
+        END {$direction}
+    ", [Anagrafica::TIPO_PERSONA]);
+    }
+
+
     public function pratiche(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -37,6 +49,23 @@ class Controparte extends Anagrafica
         )
             ->withPivot('tipo_relazione')
             ->withTimestamps()
-            ->wherePivot('tipo_relazione', 'controparte');
+            ->wherePivot('tipo_relazione', self::TYPE_CONTROPARTE)
+            ->withPivotValue('tipo_relazione', self::TYPE_CONTROPARTE);
     }
+
+    public function pratica(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Pratica::class,
+            'anagrafica_pratica',
+            'anagrafica_id',
+            'pratica_id'
+        )
+            ->withPivot('tipo_relazione')
+            ->withTimestamps()
+            ->wherePivot('tipo_relazione', self::TYPE_CONTROPARTE);
+    }
+
+
+
 }
