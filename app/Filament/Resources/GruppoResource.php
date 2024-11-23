@@ -92,6 +92,9 @@ class GruppoResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')  // Ordinamento singolo
+            ->paginated([100, 150, 'all'])
+            ->defaultPaginationPageOption(100)
             ->columns([
 
 
@@ -125,12 +128,15 @@ class GruppoResource extends Resource
                         return $query->orderBy('user_id', $direction);
                     }),
 
-                Tables\Columns\TextColumn::make('pratiche.numero_pratica')
+                Tables\Columns\TextColumn::make('pratiche.nome')
                     ->label('Pratiche')
                     ->searchable()
+                    ->sortable(query: fn (Builder $query, string $direction) => $query->orderByPraticheCount($direction))
                     ->toggleable()
-                    ->toggledHiddenByDefault()
-                    ->sortable(),
+                    ->badge()
+                    ->getStateUsing(function ($record): string {
+                        return $record->pratiche->count();
+                    }),
 
 
                 Tables\Columns\TextColumn::make('created_at')
@@ -141,10 +147,7 @@ class GruppoResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                // TODO: Implementare i filtri
-               // Tables\Filters\SelectFilter::make('owner')
-               //     ->relationship('owner', 'name')
-               //     ->label('Filtra per Responsabile')
+                // Tables\Filters\TrashedFilter::make(),
 
             ])
             ->actions([

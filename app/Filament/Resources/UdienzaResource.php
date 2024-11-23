@@ -76,6 +76,9 @@ class UdienzaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')  // Ordinamento singolo
+            ->paginated([100, 150, 'all'])
+            ->defaultPaginationPageOption(100)
             ->columns([
 
                 // Nome pratica
@@ -127,7 +130,26 @@ class UdienzaResource extends Resource
                     }),
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
+
+                Tables\Filters\SelectFilter::make('pratica_id')
+                    ->label('Pratica')
+                    ->options(
+                        Pratica::all()->pluck('numero_pratica', 'id')
+                    )
+                    ->searchable(),
+
+                Tables\Filters\SelectFilter::make('stato')
+                    ->label('Stato')
+                    ->options([
+                        'in_corso' => 'In corso',
+                        'da_iniziare' => 'Da iniziare',
+                        'completata' => 'Completata',
+                        'annullata' => 'Annullata',
+                    ])
+                    ->searchable(),
+
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

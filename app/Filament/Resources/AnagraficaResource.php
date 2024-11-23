@@ -32,10 +32,7 @@ class AnagraficaResource extends Resource
 
     use HasTeamAuthorizationScope;
 
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getAnagraficaBasedQuery();
-    }
+
 
     public static function form(Form $form): Form
     {
@@ -49,25 +46,22 @@ class AnagraficaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')  // Ordinamento singolo
+            ->paginated([100, 150, 'all'])
+            ->defaultPaginationPageOption(100)
             ->columns([
                 Tables\Columns\TextColumn::make('nome_completo')
                     ->label('Nome/Denominazione')
                     ->searchable(['nome', 'cognome', 'denominazione'])
                     ->sortable(),
 
-
-
-
                 Tables\Columns\TextColumn::make('email')
                     ->searchable()
                     ->sortable(),
 
-
                 Tables\Columns\TextColumn::make('pratiche.nome')
                     ->label('Pratiche')
                     ->searchable()
-
-
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('type')
@@ -80,7 +74,7 @@ class AnagraficaResource extends Resource
                     ]),
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

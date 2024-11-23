@@ -7,6 +7,10 @@ use Filament\Panel\Concerns\HasTenancy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Jetstream\HasTeams;
@@ -16,6 +20,15 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     use HasApiTokens;
+
+    public const ROLE_IMPORTANCE = [
+        'super_admin' => 1,
+        'Amministratore' => 2,
+        'Coordinatore' => 3,
+        'Avvocato' => 4,
+        'Cliente' => 5,
+        'Segreteria' => 6
+    ];
 
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
@@ -34,6 +47,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'is_banned'
     ];
 
     /**
@@ -69,6 +83,28 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+
+
+    protected function scopeOrderByRoleImportance($query, $direction = 'asc')
+    {
+        $cases = collect(self::ROLE_IMPORTANCE)
+            ->map(fn($order, $role) => "WHEN '{$role}' THEN {$order}")
+            ->join(' ');
+
+        return $query
+            ->leftJoin(DB::raw("(
+            SELECT model_id, 
+                   MIN(CASE roles.name {$cases} ELSE 99 END) as role_importance,
+                   MIN(roles.name) as role_name
+            FROM model_has_roles
+            LEFT JOIN roles ON model_has_roles.role_id = roles.id
+            GROUP BY model_id
+        ) as user_roles"), 'users.id', '=', 'user_roles.model_id')
+            ->orderBy('user_roles.role_importance', $direction)
+            ->select('users.*');
+    }
+
 
 
     // detach user from owned teams if user is updated

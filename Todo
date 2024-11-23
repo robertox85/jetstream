@@ -1,0 +1,17 @@
+Richieste:
+- cambiare colore testo in tabella pratiche in base al gruppo che la visualizza
+- Ottimizzare la ricerca delle pratiche
+- Ottimizza export excel pratiche
+
+FATTO
+- gestione dei filtri nelle tabelle (es. pratiche, anagrafiche)
+- cambiare numero_pratica - deve seguire  il cronologico di tutte le pratiche
+- anagrafiche - validazione per Nome Completo / Codice Fiscale / Partita IVA / Email
+- gestione soft delete delle pratiche - non vanno eliminati i record in relazione con le pratiche
+- gestione dell'ordinamento delle colonne nelle tabelle (es. pratiche, anagrafiche)
+
+Da verificare:
+- gestione soft delete delle anagrafiche - non vanno eliminati i record in relazione con le anagrafiche - Verificare se serve.
+
+Da ricordare:
+Anagrafiche unique: Nome Cognome / denominazione / Codice Fiscale / Partita IVA / Email / pec

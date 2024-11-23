@@ -2,16 +2,22 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\AssistitoExporter;
+use App\Filament\Imports\AssistitoImporter;
 use App\Filament\Resources\AssistitoResource\Pages;
 use App\Filament\Resources\AssistitoResource\RelationManagers;
 
+use App\Imports\AssistitoImport;
 use App\Models\Anagrafica;
 use App\Models\AnagraficaPratica;
 use App\Models\Assistito;
 use App\Models\Pratica;
+use App\Models\Team;
 use App\Traits\HasAnagraficaForm;
 use App\Traits\HasPraticaForm;
 use App\Traits\HasTeamAuthorizationScope;
+use Filament\Actions\Action;
+use Filament\Actions\CreateAction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -21,6 +27,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Imports;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AssistitoResource extends Resource
 {
@@ -34,6 +43,7 @@ class AssistitoResource extends Resource
     protected static ?string $slug = 'assistiti';
     protected static ?string $navigationGroup = 'Anagrafiche';
 
+
     use HasPraticaForm, HasAnagraficaForm, HasTeamAuthorizationScope;
 
 
@@ -46,53 +56,41 @@ class AssistitoResource extends Resource
     {
 
         return $form
-            ->schema(static::getAnagraficaFormSchema(true,'assistito'));
+            ->schema(static::getAnagraficaFormSchema(true, 'assistito'));
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')  // Ordinamento singolo
+            ->paginated([100, 150, 'all'])
+            ->defaultPaginationPageOption(100)
             ->columns([
 
                 Tables\Columns\TextColumn::make('pratica.nome')
                     ->label('Nome Pratica')
-                    ->getStateUsing(function ($record) {
-                        // get from pivot table
-                        $pratica = $record->pratiche->first();
-                        if ($pratica) {
-                            return $pratica->nome;
-                        }
-                        return null;
-                    })
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                ,
 
                 Tables\Columns\TextColumn::make('pratica.numero_pratica')
                     ->label('Numero Pratica')
-                    ->getStateUsing(function ($record) {
-                        // get from pivot table
-                        $pratica = $record->pratiche->first();
-                        if ($pratica) {
-                            return $pratica->numero_pratica;
-                        }
-                        return null;
-                    })
                     ->searchable()
                     ->sortable()
                     ->toggleable()
                     ->toggledHiddenByDefault(),
 
 
-
                 Tables\Columns\TextColumn::make('nome_completo')
                     ->label('Nome/Denominazione')
                     ->searchable(['nome', 'cognome', 'denominazione'])
-                    ->sortable(),
+                    ->sortable(query: fn(Builder $query, string $direction) => $query->orderByNomeCompleto($direction)),
 
 
                 TextColumn::make('tipo_utente')
                     ->label('Tipo Utente')
                     ->toggleable()
+                    ->sortable()
                     ->toggledHiddenByDefault()
                 ,
 
@@ -122,43 +120,51 @@ class AssistitoResource extends Resource
                 TextColumn::make('indirizzo')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                    ->sortable()
                 ,
 
                 TextColumn::make('codice_postale')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                    ->sortable()
                 ,
 
                 TextColumn::make('citta')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                    ->sortable()
                 ,
 
                 TextColumn::make('provincia')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                    ->sortable()
                 ,
 
                 // Contatti
                 TextColumn::make('telefono')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                    ->sortable()
                 ,
 
                 TextColumn::make('cellulare')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                    ->sortable()
                 ,
 
                 TextColumn::make('email')
                     ->searchable()
                     ->toggleable()
+                    ->sortable()
 
                 ,
 
                 TextColumn::make('pec')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                    ->sortable()
                 ,
 
                 // Dati fiscali
@@ -166,23 +172,26 @@ class AssistitoResource extends Resource
                     ->searchable()
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                    ->sortable()
                 ,
 
                 TextColumn::make('partita_iva')
                     ->searchable()
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                    ->sortable()
                 ,
 
                 TextColumn::make('codice_univoco_destinatario')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                    ->sortable()
                 ,
 
                 // Altri dati
                 TextColumn::make('nota')
                     ->toggleable()
-
+                    ->sortable()
                     ->limit(10)
                     ->wrap(),
 
@@ -191,22 +200,28 @@ class AssistitoResource extends Resource
                     ->label('Data Creazione')
                     ->dateTime('d/m/Y H:i')
                     ->toggleable()
-                    ->toggledHiddenByDefault(),
+                    ->toggledHiddenByDefault()
+                    ->sortable(),
 
                 TextColumn::make('updated_at')
                     ->label('Ultima Modifica')
                     ->dateTime('d/m/Y H:i')
                     ->toggleable()
-                    ->toggledHiddenByDefault(),
+                    ->toggledHiddenByDefault()
+                    ->sortable(),
 
                 TextColumn::make('deleted_at')
                     ->label('Data Cancellazione')
                     ->dateTime('d/m/Y H:i')
                     ->toggleable()
-                    ->toggledHiddenByDefault(),
+                    ->toggledHiddenByDefault()
+                    ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
+
+
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -220,10 +235,16 @@ class AssistitoResource extends Resource
                             ->body('Il record è stato eliminato con successo.') // Optional
                     ),
             ])
+            ->headerActions([
+
+            ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+                Tables\Actions\ExportBulkAction::make()
+                    ->exporter(AssistitoExporter::class),
+
             ]);
     }
 

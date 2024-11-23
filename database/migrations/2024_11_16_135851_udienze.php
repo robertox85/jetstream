@@ -80,7 +80,6 @@ return new class extends Migration
             // Es: "tutte le udienze da svolgere assegnate all'avvocato Y"
             $table->index(['assigned_to', 'stato']);
         });
-
     }
 
     /**

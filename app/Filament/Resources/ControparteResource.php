@@ -54,18 +54,13 @@ class ControparteResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')  // Ordinamento singolo
+            ->paginated([100, 150, 'all'])
+            ->defaultPaginationPageOption(100)
             ->columns([
 
                 Tables\Columns\TextColumn::make('pratica.nome')
                     ->label('Nome Pratica')
-                    ->getStateUsing(function ($record) {
-                        // get from pivot table
-                        $pratica = $record->pratiche->first();
-                        if ($pratica) {
-                            return $pratica->nome;
-                        }
-                        return null;
-                    })
                     ->searchable()
                     ->sortable(),
 
@@ -85,15 +80,16 @@ class ControparteResource extends Resource
                     ->toggledHiddenByDefault(),
 
                 Tables\Columns\TextColumn::make('nome_completo')
-                    ->label('Nome Completo')
+                    ->label('Nome/Denominazione')
                     ->searchable(['nome', 'cognome', 'denominazione'])
-                    ->sortable(),
+                    ->sortable(query: fn (Builder $query, string $direction) => $query->orderByNomeCompleto($direction)),
 
 
                 TextColumn::make('tipo_utente')
                     ->label('Tipo Utente')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                    ->sortable()
                 ,
 
                 TextColumn::make('denominazione')
@@ -101,6 +97,7 @@ class ControparteResource extends Resource
                     ->sortable()
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                    ->sortable()
                 ,
 
                 // Dati personali
@@ -109,6 +106,7 @@ class ControparteResource extends Resource
                     ->toggleable()
                     ->sortable()
                     ->toggledHiddenByDefault()
+                    ->sortable()
                 ,
 
                 TextColumn::make('cognome')
@@ -116,49 +114,58 @@ class ControparteResource extends Resource
                     ->sortable()
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                    ->sortable()
                 ,
 
                 // Indirizzo
                 TextColumn::make('indirizzo')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                ->sortable()
                 ,
 
                 TextColumn::make('codice_postale')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                ->sortable()
                 ,
 
                 TextColumn::make('citta')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                ->sortable()
                 ,
 
                 TextColumn::make('provincia')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                ->sortable()
                 ,
 
                 // Contatti
                 TextColumn::make('telefono')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                ->sortable()
                 ,
 
                 TextColumn::make('cellulare')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                ->sortable()
                 ,
 
                 TextColumn::make('email')
                     ->searchable()
                     ->toggleable()
+                ->sortable()
 
                 ,
 
                 TextColumn::make('pec')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                ->sortable()
                 ,
 
                 // Dati fiscali
@@ -166,47 +173,53 @@ class ControparteResource extends Resource
                     ->searchable()
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                ->sortable()
                 ,
 
                 TextColumn::make('partita_iva')
                     ->searchable()
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                ->sortable()
                 ,
 
                 TextColumn::make('codice_univoco_destinatario')
                     ->toggleable()
                     ->toggledHiddenByDefault()
+                ->sortable()
                 ,
 
                 // Altri dati
                 TextColumn::make('nota')
                     ->toggleable()
-
                     ->limit(10)
-                    ->wrap(),
+                    ->wrap()
+                    ->sortable(),
 
                 // Timestamp
                 TextColumn::make('created_at')
                     ->label('Data Creazione')
                     ->dateTime('d/m/Y H:i')
                     ->toggleable()
-                    ->toggledHiddenByDefault(),
+                    ->toggledHiddenByDefault()
+                ->sortable(),
 
                 TextColumn::make('updated_at')
                     ->label('Ultima Modifica')
                     ->dateTime('d/m/Y H:i')
                     ->toggleable()
-                    ->toggledHiddenByDefault(),
+                    ->toggledHiddenByDefault()
+                ->sortable(),
 
                 TextColumn::make('deleted_at')
                     ->label('Data Cancellazione')
                     ->dateTime('d/m/Y H:i')
                     ->toggleable()
-                    ->toggledHiddenByDefault(),
+                    ->toggledHiddenByDefault()
+                ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

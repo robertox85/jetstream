@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 class Udienza extends Model
 {
     /** @use HasFactory<\Database\Factories\UdienzaFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
 
     protected $table = 'udienze';
@@ -61,6 +62,11 @@ class Udienza extends Model
     }
 
     // SCOPE QUERY
+    // UDienze attive
+    public function scopeAttive($query)
+    {
+        return $query->whereNull('deleted_at');
+    }
 
     // Udienze future
     public function scopeFuture($query)

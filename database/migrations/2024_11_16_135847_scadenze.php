@@ -76,7 +76,6 @@ return new class extends Migration
             // Es: "tutte le scadenze da iniziare assegnate all'utente Y"
             $table->index(['assigned_to', 'stato']);
         });
-
     }
 
     /**
