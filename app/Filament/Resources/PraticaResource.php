@@ -14,6 +14,7 @@ use App\Models\Team;
 use App\Traits\HasAnagraficaForm;
 use App\Traits\HasPraticaForm;
 use App\Traits\HasTeamAuthorizationScope;
+use DiscoveryDesign\FilamentGaze\Forms\Components\GazeBanner;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -57,6 +58,14 @@ class PraticaResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Grid::make('')
+                ->schema([
+                    GazeBanner::make()
+                        ->columnSpanFull()
+                        ->lock()
+                        ->hideOnCreate()
+                        ->canTakeControl(fn() => auth()->user()->isAdmin()),
+                ]),
                 Forms\Components\Tabs::make('Pratica')
                     ->tabs([
                         // Informazioni Principali

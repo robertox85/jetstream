@@ -58,6 +58,7 @@ trait HasAnagraficaForm
         }
 
         $baseSchema = [
+
             Forms\Components\TextInput::make('denominazione')
                 ->label('Denominazione')
                 ->required()
