@@ -524,6 +524,7 @@ class PraticaResource extends Resource
             'index' => Pages\ListPraticas::route('/'),
             'create' => Pages\CreatePratica::route('/create'),
             'edit' => Pages\EditPratica::route('/{record}/edit'),
+            'revisions' => Pages\RevisionsPratica::route('/{record}/revisions'),
         ];
     }
 }
