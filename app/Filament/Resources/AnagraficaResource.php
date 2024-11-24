@@ -24,10 +24,11 @@ class AnagraficaResource extends Resource
     protected static ?string $pluralModelLabel = 'Anagrafiche';
 
     protected static ?string $slug = 'anagrafiche';
-    protected static ?string $navigationGroup = 'Amministrazione';
+    protected static ?string $navigationGroup = 'Anagrafiche';
+    protected static ?int $navigationSort = 100;
 
 
-    protected static bool $shouldRegisterNavigation = false;
+    protected static bool $shouldRegisterNavigation = true;
 
 
     use HasTeamAuthorizationScope;
@@ -97,8 +98,8 @@ class AnagraficaResource extends Resource
     {
         return [
             'index' => Pages\ListAnagraficas::route('/'),
-            'create' => Pages\CreateAnagrafica::route('/create'),
-            'edit' => Pages\EditAnagrafica::route('/{record}/edit'),
+            //'create' => Pages\CreateAnagrafica::route('/create'),
+            //'edit' => Pages\EditAnagrafica::route('/{record}/edit'),
         ];
     }
 }
