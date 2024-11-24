@@ -9,6 +9,7 @@ use App\Traits\HasAnagraficaForm;
 use App\Traits\HasTeamAuthorizationScope;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -79,6 +80,15 @@ class AnagraficaResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->requiresConfirmation()
+                    ->modalHeading('Sei sicuro di voler eliminare questo record?')
+                    ->successNotification(
+                        Notification::make()
+                            ->success()
+                            ->title('Record eliminato')
+                            ->body('Il record è stato eliminato con successo.') // Optional
+                    ),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
