@@ -10,6 +10,18 @@ class ActivityPolicy
 {
     use HandlesAuthorization;
 
+    public function before(User $user, string $ability): bool|null
+    {
+        // Super Admin e Admin hanno pieno controllo
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
+            return true;
+        }
+
+        // Usa false se vuoi bloccare categoricamente l'accesso, senza eseguire altri controlli.
+        // Se vuoi eseguire altri controlli, usa null.
+        return null;
+    }
+
     /**
      * Determine whether the user can view any models.
      */
