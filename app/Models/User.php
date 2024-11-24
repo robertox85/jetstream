@@ -106,9 +106,34 @@ class User extends Authenticatable
     }
 
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
+
     public function isAdmin(): bool
     {
-        return $this->hasRole('super_admin') || $this->hasRole('Amministratore');
+        return $this->hasRole('Amministratore');
+    }
+
+    public function isCoordinator(): bool
+    {
+        return $this->hasRole('Coordinatore');
+    }
+
+    public function isLawyer(): bool
+    {
+        return $this->hasRole('Avvocato');
+    }
+
+    public function isClient(): bool
+    {
+        return $this->hasRole('Cliente');
+    }
+
+    public function isSecretary(): bool
+    {
+        return $this->hasRole('Segreteria');
     }
 
     // detach user from owned teams if user is updated
