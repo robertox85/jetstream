@@ -7,7 +7,7 @@ use App\Filament\Imports\AssistitoImporter;
 use App\Filament\Resources\AssistitoResource\Pages;
 use App\Filament\Resources\AssistitoResource\RelationManagers;
 
-use App\Imports\AssistitoImport;
+
 use App\Models\Anagrafica;
 use App\Models\AnagraficaPratica;
 use App\Models\Assistito;

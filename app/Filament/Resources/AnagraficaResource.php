@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\AnagraficaResource\Pages;
 use App\Filament\Resources\AnagraficaResource\RelationManagers;
 use App\Models\Anagrafica;
+use App\Traits\HasAnagraficaForm;
 use App\Traits\HasTeamAuthorizationScope;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -32,6 +33,7 @@ class AnagraficaResource extends Resource
 
 
     use HasTeamAuthorizationScope;
+    use HasAnagraficaForm;
 
 
 
@@ -39,9 +41,7 @@ class AnagraficaResource extends Resource
     {
 
         return $form
-            ->schema([
-
-            ]);
+            ->schema(static::getAnagraficaFormSchema(true));
     }
 
     public static function table(Table $table): Table
