@@ -137,6 +137,7 @@ class AdminPanelProvider extends PanelProvider
             ->plugins([
                 FilamentShieldPlugin::make(),
                 FilamentUsersPlugin::make(),
+                \DiscoveryDesign\FilamentGaze\FilamentGazePlugin::make()
 
             ])
 

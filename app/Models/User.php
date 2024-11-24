@@ -106,6 +106,10 @@ class User extends Authenticatable
     }
 
 
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('super_admin') || $this->hasRole('Amministratore');
+    }
 
     // detach user from owned teams if user is updated
 
