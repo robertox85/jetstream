@@ -64,7 +64,7 @@ class PraticaResource extends Resource
                         ->columnSpanFull()
                         ->lock()
                         ->hideOnCreate()
-                        ->canTakeControl(fn() => auth()->user()->isAdmin()),
+                        ->canTakeControl(true),
                 ]),
                 Forms\Components\Tabs::make('Pratica')
                     ->tabs([
