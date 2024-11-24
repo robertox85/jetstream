@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PraticaResource\Pages;
 
+use App\Filament\Exports\CompleteExporter;
 use App\Filament\Exports\PraticaExporter;
 use App\Filament\Imports\PraticaImporter;
 use App\Filament\Resources\PraticaResource;

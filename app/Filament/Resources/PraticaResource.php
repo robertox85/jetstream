@@ -366,7 +366,7 @@ class PraticaResource extends Resource
    //  'lavorazione',
    //  'contabilita',
         return $table
-            ->defaultSort('numero_pratica', 'asc')  // Ordinamento singolo
+            ->defaultSort('created_at', 'desc')
             ->paginated([100, 150, 'all'])
             ->defaultPaginationPageOption(100)
             ->columns([
@@ -457,6 +457,13 @@ class PraticaResource extends Resource
                     ->color('info')
                     ->label('Gruppi')
                     ->searchable(),
+
+                // created_at
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Data creazione')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
+                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),

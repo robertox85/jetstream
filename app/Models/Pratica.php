@@ -107,16 +107,7 @@ class Pratica extends Model
     }
 
     // Relazione con contabilita
-    public function contabilita()
-    {
-        return $this->hasMany(Contabilita::class);
-    }
 
-    // Relazione con lavorazioni
-    public function lavorazioni()
-    {
-        return $this->hasMany(Lavorazione::class);
-    }
 
 // Modifica anche i metodi di utilità
     public function aggiungiAssistito(Assistito $assistito)
@@ -561,11 +552,20 @@ class Pratica extends Model
             }
         });
 
+        static::forceDeleting(function ($pratica) {
+            DB::table('anagrafica_pratica')->where('pratica_id', $pratica->id)->delete();
+        });
+
         // Ripristino dei figli
         static::restoring(function ($pratica) {
             $pratica->udienze()->withTrashed()->restore();
             $pratica->scadenze()->withTrashed()->restore();
             $pratica->note()->withTrashed()->restore();
+
+            // Ripristino anche le anagrafiche
+            DB::table('anagrafica_pratica')
+                ->where('pratica_id', $pratica->id)
+                ->update(['deleted_at' => null]);
         });
 
 
