@@ -598,6 +598,14 @@ class Pratica extends Model
         });
 
 
+        // Regenera il numero pratica se il team_id cambia
+        static::updating(function ($pratica) {
+            if ($pratica->isDirty('team_id')) {
+                // TODO: Verificare se è necessario rigenerare il numero pratica
+                // $pratica->numero_pratica = $pratica->generateNumeroPratica($pratica);
+            }
+        });
+
     }
 
     /**
