@@ -14,7 +14,7 @@ trait HasPermission
 
     public function before(User $user, string $ability): bool|null
     {
-        if ($user->is_suspended) {
+        if ($user->is_banned) {
             return false;
         }
         // Super Admin e Admin hanno pieno controllo

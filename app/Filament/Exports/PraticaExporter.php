@@ -11,6 +11,12 @@ class PraticaExporter extends Exporter
 {
     protected static ?string $model = Pratica::class;
 
+
+
+    // Export also the soft deleted records
+    protected static bool $withTrashed = true;
+
+
     public static function getColumns(): array
     {
         return [
@@ -32,6 +38,39 @@ class PraticaExporter extends Exporter
             ExportColumn::make('deleted_at'),
             ExportColumn::make('contabilita'),
             ExportColumn::make('lavorazione'),
+
+            // Relazioni anagrafiche
+            ExportColumn::make('clienti')
+                ->label('Clienti')
+                ->state(function (Pratica $record): string {
+                    return $record->anagrafiche()
+                        ->wherePivot('tipo_relazione', 'cliente')
+                        ->pluck('denominazione')
+                        ->join(', ');
+                }),
+            ExportColumn::make('controparti')
+                ->label('Controparti')
+                ->state(function (Pratica $record): string {
+                    return $record->anagrafiche()
+                        ->wherePivot('tipo_relazione', 'controparte')
+                        ->pluck('denominazione')
+                        ->join(', ');
+                }),
+            // Documenti count
+            ExportColumn::make('documenti_count')
+                ->label('Numero Documenti')
+                ->state(function (Pratica $record): int {
+                    return $record->documenti_count ?? 0;
+                }),
+            // Udienze future
+            ExportColumn::make('prossima_udienza')
+                ->label('Prossima Udienza')
+                ->state(function (Pratica $record): ?string {
+                    return $record->udienze()
+                        ->where('data_ora', '>=', now())
+                        ->orderBy('data_ora')
+                        ->first()?->data_ora?->format('d/m/Y H:i');
+                }),
         ];
     }
 

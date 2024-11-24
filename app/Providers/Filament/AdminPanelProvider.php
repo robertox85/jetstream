@@ -53,6 +53,8 @@ class AdminPanelProvider extends PanelProvider
                     ->visible(fn(): bool => auth()->user()->hasRole('super_admin'))
                     ->group('Amministrazione')
                     ->url('/admin/shield/roles'),
+
+
             ])
             ->navigationGroups([
 
@@ -105,7 +107,10 @@ class AdminPanelProvider extends PanelProvider
                     ]),
 
             ])
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->resources([])
+            ->discoverResources(
+                in: app_path('Filament/Resources'),
+                for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
@@ -132,6 +137,7 @@ class AdminPanelProvider extends PanelProvider
                 FilamentUsersPlugin::make(),
 
             ])
+
 
             ->authMiddleware([
                 Authenticate::class,
