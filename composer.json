@@ -15,6 +15,8 @@
         "laravel/tinker": "^2.9",
         "league/flysystem-sftp-v3": "^3.29",
         "livewire/livewire": "^3.0",
+        "mansoor/filament-versionable": "^0.0.11",
+        "saade/filament-fullcalendar": "^3.0",
         "spatie/laravel-activitylog": "^4.9",
         "stechstudio/filament-impersonate": "^3.14",
         "tomatophp/filament-users": "^2.0",

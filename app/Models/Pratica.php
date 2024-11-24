@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Overtrue\LaravelVersionable\Versionable;
+use Overtrue\LaravelVersionable\VersionStrategy;
+
 
 class Pratica extends Model
 {
@@ -17,6 +20,12 @@ class Pratica extends Model
     use HasFactory;
     use HasImportExportActions;
     use SoftDeletes;
+    use Versionable;
+
+
+    protected $versionable = ['nome', 'tipologia', 'competenza', 'ruolo_generale', 'giudice', 'stato', 'altri_riferimenti', 'priority', 'data_apertura', 'team_id', 'lavorazione', 'contabilita'];
+
+    protected $versionStrategy = VersionStrategy::SNAPSHOT;
 
     protected $table = 'pratiche';
 
@@ -226,19 +235,22 @@ class Pratica extends Model
                 private $parts = [];
                 private $separatore;
 
-                public function __construct($pratica, $config) {
+                public function __construct($pratica, $config)
+                {
                     $this->pratica = $pratica;
                     $this->config = $config;
                     $this->separatore = $config['separatore'];
                 }
 
-                public function build(): string {
+                public function build(): string
+                {
                     $this->buildPartsBasedOnFormat();
                     $this->addProgressiveNumber();
                     return $this->combinePartsToString();
                 }
 
-                private function buildPartsBasedOnFormat() {
+                private function buildPartsBasedOnFormat()
+                {
                     switch ($this->config['formato']) {
                         case 'tipo':
                             $this->addTipoPart();
@@ -252,13 +264,15 @@ class Pratica extends Model
                     }
                 }
 
-                private function addTipoPart() {
+                private function addTipoPart()
+                {
                     $prefissi = $this->config['prefissi_tipo']['prefissi'];
                     $defaultPrefix = $this->config['prefissi_tipo']['default'];
                     $this->parts[] = $prefissi[$this->pratica->tipologia] ?? $defaultPrefix;
                 }
 
-                private function addTeamPart() {
+                private function addTeamPart()
+                {
                     if (!$this->pratica->team_id) {
                         Log::warning('Pratica senza team', ['pratica_id' => $this->pratica->id]);
                         $this->parts[] = 'GEN';
@@ -268,7 +282,8 @@ class Pratica extends Model
                     $this->parts[] = 'G-' . $teamPrefix;
                 }
 
-                private function addDateParts() {
+                private function addDateParts()
+                {
                     if ($this->config['componenti']['anno']['includi']) {
                         $this->parts[] = date($this->config['componenti']['anno']['formato']);
                     }
@@ -277,7 +292,8 @@ class Pratica extends Model
                     }
                 }
 
-                private function addProgressiveNumber() {
+                private function addProgressiveNumber()
+                {
                     $pattern = $this->createSearchPattern();
                     $query = $this->buildProgressiveQuery($pattern);
                     $ultimaPratica = $query->orderBy('id', 'desc')->first();
@@ -286,18 +302,21 @@ class Pratica extends Model
                     $this->parts[] = str_pad($numero, $this->config['lunghezza_numero'], '0', STR_PAD_LEFT);
                 }
 
-                private function createSearchPattern(): string {
+                private function createSearchPattern(): string
+                {
                     return implode($this->separatore, $this->parts) . (!empty($this->parts) ? $this->separatore : '');
                 }
 
-                private function buildProgressiveQuery($pattern) {
+                private function buildProgressiveQuery($pattern)
+                {
                     $query = $this->pratica::withTrashed()
                         ->where('numero_pratica', 'like', $pattern . '%');
 
                     return $this->applyResetLogic($query);
                 }
 
-                private function applyResetLogic($query) {
+                private function applyResetLogic($query)
+                {
                     switch ($this->config['reset_contatore']['frequenza']) {
                         case 'annuale':
                             return $query->whereYear('created_at', Carbon::now()->year);
@@ -309,7 +328,8 @@ class Pratica extends Model
                     }
                 }
 
-                private function calculateNextNumber($ultimaPratica) {
+                private function calculateNextNumber($ultimaPratica)
+                {
                     if (!$ultimaPratica) {
                         return $this->config['numero_partenza'];
                     }
@@ -321,7 +341,7 @@ class Pratica extends Model
                         $maxNumber = static::withTrashed()
                             ->whereYear('created_at', Carbon::now()->year)
                             ->get()
-                            ->map(function($pratica) {
+                            ->map(function ($pratica) {
                                 if (preg_match('/-(\d{3})$/', $pratica->numero_pratica, $matches)) {
                                     return (int)$matches[1];
                                 }
@@ -335,7 +355,8 @@ class Pratica extends Model
                     return $this->config['numero_partenza'];
                 }
 
-                private function combinePartsToString(): string {
+                private function combinePartsToString(): string
+                {
                     return implode($this->separatore, $this->parts);
                 }
             };
@@ -369,12 +390,14 @@ class Pratica extends Model
                 private $config;
                 private $replacements = [];
 
-                public function __construct($pratica, $config) {
+                public function __construct($pratica, $config)
+                {
                     $this->pratica = $pratica;
                     $this->config = $config;
                 }
 
-                public function build(): array {
+                public function build(): array
+                {
                     $this->addDateReplacements();
                     $this->addTipoReplacement();
                     $this->addTeamReplacement();
@@ -382,7 +405,8 @@ class Pratica extends Model
                     return $this->replacements;
                 }
 
-                private function addDateReplacements() {
+                private function addDateReplacements()
+                {
                     $this->replacements['{anno}'] = $this->config['componenti']['anno']['includi']
                         ? date($this->config['componenti']['anno']['formato'])
                         : '';
@@ -392,7 +416,8 @@ class Pratica extends Model
                         : '';
                 }
 
-                private function addTipoReplacement() {
+                private function addTipoReplacement()
+                {
                     $prefissi = $this->config['prefissi_tipo']['prefissi'];
                     $defaultPrefix = $this->config['prefissi_tipo']['default'];
 
@@ -401,7 +426,8 @@ class Pratica extends Model
                         : $defaultPrefix;
                 }
 
-                private function addTeamReplacement() {
+                private function addTeamReplacement()
+                {
                     if (!$this->pratica->team_id) {
                         $this->replacements['{team}'] = 'GEN';
                         return;
@@ -411,7 +437,8 @@ class Pratica extends Model
                     $this->replacements['{team}'] = $team ? $team->name : 'GEN';
                 }
 
-                private function addProgressiveReplacement() {
+                private function addProgressiveReplacement()
+                {
                     $replacements = [];
 
                     DB::transaction(function () use (&$replacements) {
@@ -468,7 +495,8 @@ class Pratica extends Model
                     $this->replacements['{numero}'] = $replacements;
                 }
 
-                private function buildProgressiveQuery($basePattern) {
+                private function buildProgressiveQuery($basePattern)
+                {
                     // Rimuovi il placeholder {numero} dal pattern per la ricerca
                     $searchPattern = str_replace('{numero}', '', $basePattern);
 
@@ -479,8 +507,8 @@ class Pratica extends Model
                 }
 
 
-
-                private function applyProgressiveLogic($query) {
+                private function applyProgressiveLogic($query)
+                {
                     switch ($this->config['componenti']['progressivo']['tipo']) {
                         case 'annuale':
                             return $query->whereYear('created_at', Carbon::now()->year);
@@ -492,7 +520,8 @@ class Pratica extends Model
                     }
                 }
 
-                private function calculateNextNumber($ultimaPratica) {
+                private function calculateNextNumber($ultimaPratica)
+                {
                     return $ultimaPratica
                         ? (intval(substr($ultimaPratica->numero_pratica, -$this->config['componenti']['progressivo']['lunghezza'])) + 1)
                         : $this->config['numero_partenza'];
