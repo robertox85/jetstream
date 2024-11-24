@@ -107,7 +107,9 @@ class AdminPanelProvider extends PanelProvider
                     ]),
 
             ])
-            ->resources([])
+            ->resources([
+                config('filament-logger.activity_resource')
+            ])
             ->discoverResources(
                 in: app_path('Filament/Resources'),
                 for: 'App\\Filament\\Resources')
