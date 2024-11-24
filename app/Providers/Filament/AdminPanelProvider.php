@@ -31,6 +31,7 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
+// use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 use TomatoPHP\FilamentUsers\FilamentUsersPlugin;
 
 class AdminPanelProvider extends PanelProvider
@@ -108,7 +109,7 @@ class AdminPanelProvider extends PanelProvider
 
             ])
             ->resources([
-                config('filament-logger.activity_resource')
+                //config('filament-logger.activity_resource')
             ])
             ->discoverResources(
                 in: app_path('Filament/Resources'),
@@ -119,8 +120,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -137,7 +137,8 @@ class AdminPanelProvider extends PanelProvider
             ->plugins([
                 FilamentShieldPlugin::make(),
                 FilamentUsersPlugin::make(),
-                \DiscoveryDesign\FilamentGaze\FilamentGazePlugin::make()
+                \DiscoveryDesign\FilamentGaze\FilamentGazePlugin::make(),
+                //FilamentFullCalendarPlugin::make()->selectable()
 
             ])
 

@@ -35,11 +35,5 @@ trait HasPermission
         return $practice->team->users->contains($this);
     }
 
-    /**
-     * Verifica se l'utente è il coordinatore di un team specifico.
-     */
-    public function isCoordinatorOfTeam($team): bool
-    {
-        return $this->hasRole('coordinator') && $team->coordinator_id === $this->id;
-    }
+
 }
