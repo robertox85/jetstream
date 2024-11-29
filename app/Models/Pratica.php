@@ -115,7 +115,12 @@ class Pratica extends Model
             ->withPivotValue('tipo_relazione', 'controparte'); // Aggiunge automaticamente il tipo
     }
 
-    // Relazione con contabilita
+    // utenti extra
+    public function utenti_extra()
+    {
+        return $this->belongsToMany(User::class, 'pratiche_utenti', 'pratica_id', 'user_id')
+            ->withTimestamps();
+    }
 
 
 // Modifica anche i metodi di utilità
@@ -153,411 +158,103 @@ class Pratica extends Model
         });
     }
 
-    // METODI DI UTILITÀ
-
-    /**
-     * Genera il numero pratica nel formato Prefisso/NomeTeam/Anno/NumeroProgressivo
-     * Es: STD/CIVILE/2024/001
-     *
-     * @param string $prefisso Default 'STD'
-     * @return string
-     * @throws \Exception
-     */
-//    public function generateNumeroPratica(string $prefisso = 'STD', string $separatore = '-'): string
-//    {
-//        // Verifica che esista team_id
-//        if (!$this->team_id) {
-//            throw new \Exception('La pratica deve essere associata a un team per generare il numero pratica');
-//        }
-//
-//        // Ottieni il nome del team direttamente
-//        $teamName = Team::where('id', $this->team_id)->value('name');
-//        if (!$teamName) {
-//            throw new \Exception('Team non trovato');
-//        }
-//
-//        $anno = date('Y');
-//
-//        // Trova l'ultimo numero progressivo per questo team e anno
-//        // Trova l'ultimo numero progressivo per questo team e anno, inclusi i soft deleted
-//        $ultimoNumero = static::withTrashed()
-//            ->where('team_id', $this->team_id)
-//            ->whereYear('created_at', $anno)
-//            ->max('numero_pratica');
-//
-//        // Se non ci sono pratiche per questo team e anno, inizia da 1
-//        if (!$ultimoNumero) {
-//            $numeroProgressivo = 1;
-//        } else {
-//            // Estrai il numero progressivo dall'ultimo numero pratica
-//            $numeroProgressivo = (int)substr($ultimoNumero, -3);
-//            $numeroProgressivo++;
-//        }
-//
-//        // Formatta il numero progressivo con 3 cifre
-//        $numeroProgressivo = str_pad($numeroProgressivo, 3, '0', STR_PAD_LEFT);
-//
-//        return "{$prefisso}{$separatore}{$teamName}{$separatore}{$anno}{$separatore}{$numeroProgressivo}";
-//    }
-
-
-    /**
-     * Genera il numero pratica nel formato Prefisso/NomeTeam/Anno/NumeroProgressivo
-     * Es: STD/CIVILE/2024/001
-     *
-     * @param string $prefisso Default 'STD'
-     * @return string
-     * @throws \Exception
-     */
-    protected static function generateNumeroPratica($pratica): string
-    {
-        try {
-            $config = config('pratica.numero_pratica');
-
-            if (!$config) {
-                throw new \RuntimeException('Configurazione numero pratica non trovata');
-            }
-
-            Log::debug('Inizio generazione numero pratica', [
-                'pratica_id' => $pratica->id,
-                'formato' => $config['formato'],
-                'team_id' => $pratica->team_id
-            ]);
-
-            // Se il formato è custom, usa il pattern personalizzato
-            if ($config['formato'] === 'custom') {
-                return static::generateCustomFormat($pratica, $config['pattern_custom']);
-            }
-
-            $numeroBuilder = new class($pratica, $config) {
-                private $pratica;
-                private $config;
-                private $parts = [];
-                private $separatore;
-
-                public function __construct($pratica, $config)
-                {
-                    $this->pratica = $pratica;
-                    $this->config = $config;
-                    $this->separatore = $config['separatore'];
-                }
-
-                public function build(): string
-                {
-                    $this->buildPartsBasedOnFormat();
-                    $this->addProgressiveNumber();
-                    return $this->combinePartsToString();
-                }
-
-                private function buildPartsBasedOnFormat()
-                {
-                    switch ($this->config['formato']) {
-                        case 'tipo':
-                            $this->addTipoPart();
-                            break;
-                        case 'team':
-                            $this->addTeamPart();
-                            break;
-                        case 'mensile':
-                            $this->addDateParts();
-                            break;
-                    }
-                }
-
-                private function addTipoPart()
-                {
-                    $prefissi = $this->config['prefissi_tipo']['prefissi'];
-                    $defaultPrefix = $this->config['prefissi_tipo']['default'];
-                    $this->parts[] = $prefissi[$this->pratica->tipologia] ?? $defaultPrefix;
-                }
-
-                private function addTeamPart()
-                {
-                    if (!$this->pratica->team_id) {
-                        Log::warning('Pratica senza team', ['pratica_id' => $this->pratica->id]);
-                        $this->parts[] = 'GEN';
-                        return;
-                    }
-                    $teamPrefix = Team::find($this->pratica->team_id)->name ?? 'TEAM';
-                    $this->parts[] = 'G-' . $teamPrefix;
-                }
-
-                private function addDateParts()
-                {
-                    if ($this->config['componenti']['anno']['includi']) {
-                        $this->parts[] = date($this->config['componenti']['anno']['formato']);
-                    }
-                    if ($this->config['componenti']['mese']['includi']) {
-                        $this->parts[] = date($this->config['componenti']['mese']['formato']);
-                    }
-                }
-
-                private function addProgressiveNumber()
-                {
-                    $pattern = $this->createSearchPattern();
-                    $query = $this->buildProgressiveQuery($pattern);
-                    $ultimaPratica = $query->orderBy('id', 'desc')->first();
-
-                    $numero = $this->calculateNextNumber($ultimaPratica);
-                    $this->parts[] = str_pad($numero, $this->config['lunghezza_numero'], '0', STR_PAD_LEFT);
-                }
-
-                private function createSearchPattern(): string
-                {
-                    return implode($this->separatore, $this->parts) . (!empty($this->parts) ? $this->separatore : '');
-                }
-
-                private function buildProgressiveQuery($pattern)
-                {
-                    $query = $this->pratica::withTrashed()
-                        ->where('numero_pratica', 'like', $pattern . '%');
-
-                    return $this->applyResetLogic($query);
-                }
-
-                private function applyResetLogic($query)
-                {
-                    switch ($this->config['reset_contatore']['frequenza']) {
-                        case 'annuale':
-                            return $query->whereYear('created_at', Carbon::now()->year);
-                        case 'mensile':
-                            return $query->whereYear('created_at', Carbon::now()->year)
-                                ->whereMonth('created_at', Carbon::now()->month);
-                        default:
-                            return $query;
-                    }
-                }
-
-                private function calculateNextNumber($ultimaPratica)
-                {
-                    if (!$ultimaPratica) {
-                        return $this->config['numero_partenza'];
-                    }
-
-                    // Estrai l'ultimo numero usando una regex più precisa
-                    if (preg_match('/-(\d{3})$/', $ultimaPratica->numero_pratica, $matches)) {
-                        $lastNumber = (int)$matches[1];
-                        // Trova il numero più alto tra tutte le pratiche
-                        $maxNumber = static::withTrashed()
-                            ->whereYear('created_at', Carbon::now()->year)
-                            ->get()
-                            ->map(function ($pratica) {
-                                if (preg_match('/-(\d{3})$/', $pratica->numero_pratica, $matches)) {
-                                    return (int)$matches[1];
-                                }
-                                return 0;
-                            })
-                            ->max();
-
-                        return max($lastNumber, $maxNumber) + 1;
-                    }
-
-                    return $this->config['numero_partenza'];
-                }
-
-                private function combinePartsToString(): string
-                {
-                    return implode($this->separatore, $this->parts);
-                }
-            };
-
-            $numeroPratica = $numeroBuilder->build();
-
-            Log::info('Numero pratica generato con successo', [
-                'pratica_id' => $pratica->id,
-                'numero' => $numeroPratica
-            ]);
-
-            return $numeroPratica;
-
-        } catch (\Exception $e) {
-            Log::error('Errore nella generazione del numero pratica', [
-                'pratica_id' => $pratica->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            throw new \RuntimeException('Errore nella generazione del numero pratica: ' . $e->getMessage());
-        }
-    }
-
-    protected static function generateCustomFormat($pratica, string $pattern): string
-    {
-        try {
-            $config = config('pratica.numero_pratica');
-
-            $replacementBuilder = new class($pratica, $config) {
-                private $pratica;
-                private $config;
-                private $replacements = [];
-
-                public function __construct($pratica, $config)
-                {
-                    $this->pratica = $pratica;
-                    $this->config = $config;
-                }
-
-                public function build(): array
-                {
-                    $this->addDateReplacements();
-                    $this->addTipoReplacement();
-                    $this->addTeamReplacement();
-                    $this->addProgressiveReplacement();
-                    return $this->replacements;
-                }
-
-                private function addDateReplacements()
-                {
-                    $this->replacements['{anno}'] = $this->config['componenti']['anno']['includi']
-                        ? date($this->config['componenti']['anno']['formato'])
-                        : '';
-
-                    $this->replacements['{mese}'] = $this->config['componenti']['mese']['includi']
-                        ? date($this->config['componenti']['mese']['formato'])
-                        : '';
-                }
-
-                private function addTipoReplacement()
-                {
-                    $prefissi = $this->config['prefissi_tipo']['prefissi'];
-                    $defaultPrefix = $this->config['prefissi_tipo']['default'];
-
-                    $this->replacements['{tipo}'] = isset($this->pratica->tipologia)
-                        ? ($prefissi[$this->pratica->tipologia] ?? $defaultPrefix)
-                        : $defaultPrefix;
-                }
-
-                private function addTeamReplacement()
-                {
-                    if (!$this->pratica->team_id) {
-                        $this->replacements['{team}'] = 'GEN';
-                        return;
-                    }
-
-                    $team = Team::find($this->pratica->team_id);
-                    $this->replacements['{team}'] = $team ? $team->name : 'GEN';
-                }
-
-                private function addProgressiveReplacement()
-                {
-                    $replacements = [];
-
-                    DB::transaction(function () use (&$replacements) {
-                        $basePattern = str_replace(
-                            array_keys($this->replacements),
-                            array_values($this->replacements),
-                            $this->config['pattern_custom']
-                        );
-
-                        $query = $this->buildProgressiveQuery($basePattern);
-
-                        // Aggiungi il lock
-                        $ultimaPratica = $query->lockForUpdate()->orderBy('id', 'desc')->first();
-
-                        $numero = $this->calculateNextNumber($ultimaPratica);
-
-                        // Verifica che il numero generato non esista già
-                        $numeroGenerato = str_pad(
-                            $numero,
-                            $this->config['componenti']['progressivo']['lunghezza'],
-                            '0',
-                            STR_PAD_LEFT
-                        );
-
-                        $this->replacements['{numero}'] = $numeroGenerato;
-
-                        // Verifica che il numero completo non esista
-                        $numeroCompleto = str_replace(
-                            array_keys($this->replacements),
-                            array_values($this->replacements),
-                            $this->config['pattern_custom']
-                        );
-
-                        // Se esiste già, incrementa fino a trovare un numero disponibile
-                        while ($this->pratica::withTrashed()->where('numero_pratica', $numeroCompleto)->exists()) {
-                            $numero++;
-                            $numeroGenerato = str_pad(
-                                $numero,
-                                $this->config['componenti']['progressivo']['lunghezza'],
-                                '0',
-                                STR_PAD_LEFT
-                            );
-                            $this->replacements['{numero}'] = $numeroGenerato;
-                            $numeroCompleto = str_replace(
-                                array_keys($this->replacements),
-                                array_values($this->replacements),
-                                $this->config['pattern_custom']
-                            );
-                        }
-
-                        $replacements = $numeroGenerato;
-                    });
-
-                    $this->replacements['{numero}'] = $replacements;
-                }
-
-                private function buildProgressiveQuery($basePattern)
-                {
-                    // Rimuovi il placeholder {numero} dal pattern per la ricerca
-                    $searchPattern = str_replace('{numero}', '', $basePattern);
-
-                    $query = $this->pratica::withTrashed()
-                        ->where('numero_pratica', 'like', $searchPattern . '%');
-
-                    return $this->applyProgressiveLogic($query);
-                }
-
-
-                private function applyProgressiveLogic($query)
-                {
-                    switch ($this->config['componenti']['progressivo']['tipo']) {
-                        case 'annuale':
-                            return $query->whereYear('created_at', Carbon::now()->year);
-                        case 'mensile':
-                            return $query->whereYear('created_at', Carbon::now()->year)
-                                ->whereMonth('created_at', Carbon::now()->month);
-                        default:
-                            return $query;
-                    }
-                }
-
-                private function calculateNextNumber($ultimaPratica)
-                {
-                    return $ultimaPratica
-                        ? (intval(substr($ultimaPratica->numero_pratica, -$this->config['componenti']['progressivo']['lunghezza'])) + 1)
-                        : $this->config['numero_partenza'];
-                }
-            };
-
-            $replacements = $replacementBuilder->build();
-
-            $numeroPratica = str_replace(
-                array_keys($replacements),
-                array_values($replacements),
-                $pattern
-            );
-
-            Log::info('Numero pratica custom generato con successo', [
-                'pratica_id' => $pratica->id,
-                'pattern' => $pattern,
-                'numero' => $numeroPratica
-            ]);
-
-            return $numeroPratica;
-
-        } catch (\Exception $e) {
-            Log::error('Errore nella generazione del numero pratica custom', [
-                'pratica_id' => $pratica->id,
-                'pattern' => $pattern,
-                'error' => $e->getMessage()
-            ]);
-            throw new \RuntimeException('Errore nella generazione del numero pratica custom: ' . $e->getMessage());
-        }
-    }
 
     public function teams(): BelongsTo
     {
         return $this->belongsTo(Team::class);
 
+    }
+
+
+    /**
+     * @throws \Exception
+     */
+    public function generaNumeroPratica($pratica): string
+    {
+        DB::beginTransaction();
+        try {
+            $teamName = Team::findOrFail($pratica->team_id)->name ?? 'NoTeam';
+            $teamName = preg_replace('/[^A-Za-z0-9]/', '', $teamName);
+            $anno = Carbon::parse($pratica->created_at)->year;
+
+            $lastNumber = Pratica::withTrashed()
+                ->whereYear('created_at', $anno)
+                ->orderBy('id', 'desc')
+                ->lockForUpdate()
+                ->first();
+
+            $progressivo = $lastNumber
+                ? (intval(explode('-', $lastNumber->numero_pratica)[3]) + 1)
+                : 1;
+
+            if ($progressivo > 999) {
+                throw new \RuntimeException("Max number reached for year {$anno}");
+            }
+
+            $numeroPratica = sprintf(
+                'STD-%s-%s-%03d',
+                $teamName,
+                $anno,
+                $progressivo
+            );
+
+            if (strlen($numeroPratica) > 100) {
+                throw new \RuntimeException('Number too long');
+            }
+
+            // Check for duplicates
+            if (Pratica::withTrashed()
+                ->where('numero_pratica', $numeroPratica)
+                ->lockForUpdate()
+                ->exists()) {
+                throw new \RuntimeException('Duplicate number detected');
+            }
+
+            DB::commit();
+            return $numeroPratica;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function aggiornaNumeroPratica(?Pratica $pratica = null): void
+    {
+        DB::beginTransaction();
+        try {
+            $pratica = $pratica ?? $this;
+            Log::info('Aggiornamento numero pratica', ['pratica' => $pratica->id]);
+            $parts = explode('-', $pratica->numero_pratica);
+
+            if (count($parts) !== 4) {
+                throw new \InvalidArgumentException('Invalid number format');
+            }
+
+            $teamName = Team::findOrFail($pratica->team_id)->name ?? 'NoTeam';
+            $parts[1] = preg_replace('/[^A-Za-z0-9]/', '', $teamName);
+
+            $numeroPratica = implode('-', $parts);
+
+            if (Pratica::withTrashed()
+                ->where('numero_pratica', $numeroPratica)
+                ->where('id', '!=', $pratica->id)
+                ->exists()) {
+                throw new \RuntimeException('Duplicate number');
+            }
+
+            DB::table('pratiche')
+                ->where('id', $pratica->id)
+                ->update(['numero_pratica' => $numeroPratica]);
+
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     /**
@@ -568,7 +265,7 @@ class Pratica extends Model
         // Prima del salvataggio, se è una nuova pratica
         static::creating(function ($pratica) {
             if (empty($pratica->numero_pratica)) {
-                $pratica->numero_pratica = $pratica->generateNumeroPratica($pratica);
+                $pratica->numero_pratica = $pratica->generaNumeroPratica($pratica);
             }
         });
 
@@ -599,24 +296,12 @@ class Pratica extends Model
 
 
         // Regenera il numero pratica se il team_id cambia
-        static::updating(function ($pratica) {
+        static::updated(function ($pratica) {
             if ($pratica->isDirty('team_id')) {
-                // TODO: Verificare se è necessario rigenerare il numero pratica
-                // $pratica->numero_pratica = $pratica->generateNumeroPratica($pratica);
+                $pratica->aggiornaNumeroPratica($pratica);
             }
         });
 
-    }
-
-    /**
-     * Verifica se un numero pratica è già utilizzato
-     *
-     * @param string $numeroPratica
-     * @return bool
-     */
-    public static function isNumeroPraticaUsed($numeroPratica)
-    {
-        return static::where('numero_pratica', $numeroPratica)->exists();
     }
 
 

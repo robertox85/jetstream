@@ -59,7 +59,7 @@ class GruppoResource extends Resource
                                 'name',
                                 modifyQueryUsing: function (Builder $query) {
                                     $query->whereHas('roles', function ($query) {
-                                        $query->where('name', 'Coordinatore');
+                                        $query->whereIn('name', ['Coordinatore', 'Amministratore', 'Avvocato']);
                                     });
                                 }
                             )
