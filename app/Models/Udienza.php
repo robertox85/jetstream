@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
-class Udienza extends Model
+class Udienza extends Evento
 {
     /** @use HasFactory<\Database\Factories\UdienzaFactory> */
     use HasFactory, SoftDeletes;

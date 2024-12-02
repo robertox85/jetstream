@@ -2,13 +2,11 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ScadenzaResource\Pages;
-use App\Filament\Resources\ScadenzaResource\RelationManagers;
-use App\Models\AnagraficaPratica;
-use App\Models\Pratica;
-use App\Models\Scadenza;
+use App\Filament\Resources\AppuntamentoResource\Pages;
+use App\Filament\Resources\AppuntamentoResource\RelationManagers;
+use App\Models\Appuntamento;
+use App\Models\Evento;
 use App\Traits\HasEventoForm;
-use App\Traits\HasTeamAuthorizationScope;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -17,41 +15,33 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Log;
 
-class ScadenzaResource extends Resource
+class AppuntamentoResource extends Resource
 {
     use HasEventoForm;
 
-    protected static ?string $model = Scadenza::class;
+    protected static ?string $model = Evento::class;
 
-    //  protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $label = 'Appuntamento';
+    protected static ?string $pluralLabel = 'Appuntamenti';
 
-    protected static ?string $modelLabel = 'Scadenza';
-    protected static ?string $pluralModelLabel = 'Scadenze';
+    protected static ?string $slug = 'appuntamenti';
 
-    protected static ?string $slug = 'scadenze';
+
     protected static ?string $navigationGroup = 'Agenda';
+    protected static ?int $navigationSort = 2;
 
-    protected static ?int $navigationSort = 3;
-
-    use HasTeamAuthorizationScope;
-
-    public static function getEloquentQuery(): Builder
-    {
-        return static::getPraticaBasedQuery();
-    }
 
     public static function form(Form $form): Form
     {
         return $form
-            ->schema(static::getEventoForm( 'scadenza' ));
+            ->schema(static::getEventoForm('appuntamento'));
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->columns(static::getTableColumns( 'scadenza' ))
+            ->columns(static::getTableColumns( 'appuntamento' ))
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
             ])
@@ -77,6 +67,7 @@ class ScadenzaResource extends Resource
             ->defaultPaginationPageOption(100);
     }
 
+
     public static function getRelations(): array
     {
         return [
@@ -87,9 +78,9 @@ class ScadenzaResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListScadenzas::route('/'),
-            'create' => Pages\CreateScadenza::route('/create'),
-            'edit' => Pages\EditScadenza::route('/{record}/edit'),
+            'index' => Pages\ListAppuntamentos::route('/'),
+            'create' => Pages\CreateAppuntamento::route('/create'),
+            'edit' => Pages\EditAppuntamento::route('/{record}/edit'),
         ];
     }
 }

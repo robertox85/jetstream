@@ -64,15 +64,24 @@ class Pratica extends Model
     }
 
     // Relazione con il modello Udienza
-    public function udienze()
+    public function eventi()
     {
-        return $this->hasMany(Udienza::class)->withTrashed();
+        return $this->hasMany(Evento::class);
     }
 
-    // Relazione con il modello Scadenza
     public function scadenze()
     {
-        return $this->hasMany(Scadenza::class)->withTrashed();
+        return $this->eventi()->where('tipo', Evento::TIPO_SCADENZA);
+    }
+
+    public function udienze()
+    {
+        return $this->eventi()->where('tipo', Evento::TIPO_UDIENZA);
+    }
+
+    public function appuntamenti()
+    {
+        return $this->eventi()->where('tipo', Evento::TIPO_APPUNTAMENTO);
     }
 
     // Relazione con il modello Documento
@@ -226,7 +235,7 @@ class Pratica extends Model
         DB::beginTransaction();
         try {
             $pratica = $pratica ?? $this;
-            Log::info('Aggiornamento numero pratica', ['pratica' => $pratica->id]);
+
             $parts = explode('-', $pratica->numero_pratica);
 
             if (count($parts) !== 4) {

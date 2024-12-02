@@ -106,6 +106,51 @@ class User extends Authenticatable
     }
 
 
+    public function praticheUtenti()
+    {
+        return $this->belongsToMany(Pratica::class, 'pratiche_utenti')
+            ->withPivot('permission_type')
+            ->withTimestamps();
+    }
+
+    public function praticheInSolaLettura()
+    {
+        return $this->belongsToMany(Pratica::class, 'pratiche_utenti')
+            ->wherePivot('permission_type', 'read')
+            ->withTimestamps();
+    }
+
+    public function getAvvocati()
+    {
+        return $this->roles()->where('name', 'Avvocato')->get();
+    }
+
+    public function getSegreterie()
+    {
+        return $this->roles()->where('name', 'Segreteria')->get();
+    }
+
+    public function getCoordinatori()
+    {
+        return $this->roles()->where('name', 'Coordinatore')->get();
+    }
+
+    public function getAmministratori()
+    {
+        return $this->roles()->where('name', 'Amministratore')->get();
+    }
+
+    public function getSuperAdmin()
+    {
+        return $this->roles()->where('name', 'super_admin')->get();
+    }
+
+    public function getCliente()
+    {
+        return $this->roles()->where('name', 'Cliente')->get();
+    }
+
+
     public function isSuperAdmin(): bool
     {
         return $this->hasRole('super_admin');
@@ -136,6 +181,27 @@ class User extends Authenticatable
         return $this->hasRole('Segreteria');
     }
 
+    public function isBanned(): bool
+    {
+        return $this->is_banned;
+    }
+
+    public function ban()
+    {
+        $this->is_banned = true;
+        $this->save();
+    }
+
+    public function unban()
+    {
+        $this->is_banned = false;
+        $this->save();
+    }
+
+    public function hasExtraPermission( $pratica )
+    {
+        return $this->praticheUtenti->contains($pratica);
+    }
     // detach user from owned teams if user is updated
 
 }

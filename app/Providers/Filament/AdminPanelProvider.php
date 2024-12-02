@@ -32,6 +32,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 // use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
+use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 use TomatoPHP\FilamentUsers\FilamentUsersPlugin;
 
 class AdminPanelProvider extends PanelProvider
@@ -119,9 +120,7 @@ class AdminPanelProvider extends PanelProvider
                 Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
 
-            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -138,11 +137,10 @@ class AdminPanelProvider extends PanelProvider
                 FilamentShieldPlugin::make(),
                 FilamentUsersPlugin::make(),
                 \DiscoveryDesign\FilamentGaze\FilamentGazePlugin::make(),
-                //FilamentFullCalendarPlugin::make()->selectable()
-
+                FilamentFullCalendarPlugin::make()
+                    ->selectable()
+                    ->editable()
             ])
-
-
             ->authMiddleware([
                 Authenticate::class,
             ]);

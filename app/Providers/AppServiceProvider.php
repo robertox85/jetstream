@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Evento;
+use App\Observers\EventoObserver;
+use Filament\Support\Assets\Js;
+use Filament\Support\Facades\FilamentAsset;
 use Filament\Tables\Table;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Permission;
@@ -26,9 +30,14 @@ class AppServiceProvider extends ServiceProvider
         app(\Spatie\Permission\PermissionRegistrar::class)
             ->setPermissionClass(Permission::class)
             ->setRoleClass(Role::class);
-
         //
-        
+        // Observe Evento model
+        Evento::observe(EventoObserver::class);
+
+        FilamentAsset::register([
+            Js::make('filament-custom', __DIR__ . '/../../resources/js/filament-custom.js'),
+        ]);
+
     }
 
 }

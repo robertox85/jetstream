@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use App\Models\AnagraficaPratica;
+use App\Models\PraticaUtente;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Pratica;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -99,15 +100,42 @@ trait HasTeamAuthorizationScope
             return $query;
         }
 
+       // if ($user->hasRole('Coordinatore')) {
+       //     $teamIds = $user->ownedTeams->pluck('id')
+       //         ->merge($user->teams->pluck('id'))
+       //         ->unique();
+
+       //     return $query->whereIn('team_id', $teamIds);
+       // }
+
+
+       // return $query->whereIn('team_id', $user->teams->pluck('id'));
+
+        // Per i Coordinatori
         if ($user->hasRole('Coordinatore')) {
             $teamIds = $user->ownedTeams->pluck('id')
                 ->merge($user->teams->pluck('id'))
                 ->unique();
 
-            return $query->whereIn('team_id', $teamIds);
+            return $query->where(function($q) use ($teamIds, $user) {
+                $q->whereIn('team_id', $teamIds)
+                    ->orWhereExists(function($subquery) use ($user) {
+                        $subquery->from('pratiche_utenti')
+                            ->whereColumn('pratiche_utenti.pratica_id', 'pratiche.id')
+                            ->where('pratiche_utenti.user_id', $user->id);
+                    });
+            });
         }
 
-        return $query->whereIn('team_id', $user->teams->pluck('id'));
+        // Per tutti gli altri utenti
+        return $query->where(function($q) use ($user) {
+            $q->whereIn('team_id', $user->teams->pluck('id'))
+                ->orWhereExists(function($subquery) use ($user) {
+                    $subquery->from('pratiche_utenti')
+                        ->whereColumn('pratiche_utenti.pratica_id', 'pratiche.id')
+                        ->where('pratiche_utenti.user_id', $user->id);
+                });
+        });
     }
 
     /**
