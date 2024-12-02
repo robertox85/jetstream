@@ -34,9 +34,7 @@ class AppServiceProvider extends ServiceProvider
         // Observe Evento model
         Evento::observe(EventoObserver::class);
 
-        FilamentAsset::register([
-            Js::make('filament-custom', __DIR__ . '/../../resources/js/filament-custom.js'),
-        ]);
+
 
     }
 
