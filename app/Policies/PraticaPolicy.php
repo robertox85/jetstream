@@ -23,7 +23,23 @@ class PraticaPolicy
      */
     public function view(User $user, Pratica $pratica): bool
     {
-        return $user->can('view_pratica');
+        // return $user->can('view_pratica');
+
+        // Permesso pieno per admin
+        if ($user->hasRole(['super_admin', 'Amministratore'])) {
+            return true;
+        }
+
+        // Permesso pieno per membri del team
+        if ($pratica->team_id && $user->teams->contains($pratica->team_id)) {
+            return true;
+        }
+
+        // Permesso di sola lettura tramite pratiche_utenti
+        return $user->praticheInSolaLettura()
+            ->where('pratica_id', $pratica->id)
+            ->where('permission_type', 'read')
+            ->exists();
     }
 
     /**
@@ -31,15 +47,23 @@ class PraticaPolicy
      */
     public function create(User $user): bool
     {
+
         return $user->can('create_pratica');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Pratica $pratica): bool
+    public function update(User $user, Pratica $pratica)
     {
         return $user->can('update_pratica');
+
+        // Solo admin e membri del team possono modificare
+       // if ($user->hasRole(['super_admin', 'Amministratore'])) {
+       //     return true;
+       // }
+
+       // return $pratica->team_id && $user->teams->contains($pratica->team_id);
     }
 
     /**
@@ -47,7 +71,13 @@ class PraticaPolicy
      */
     public function delete(User $user, Pratica $pratica): bool
     {
-        return $user->can('delete_pratica');
+        //  return $user->can('delete_pratica');
+        // Solo admin e membri del team possono cancellare
+        if ($user->hasRole(['super_admin', 'Amministratore'])) {
+            return true;
+        }
+
+        return $pratica->team_id && $user->teams->contains($pratica->team_id);
     }
 
     /**

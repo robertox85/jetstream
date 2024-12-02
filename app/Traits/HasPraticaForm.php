@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use App\Models\Team;
+use App\Models\User;
 use Filament\Forms;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -23,111 +24,109 @@ trait HasPraticaForm
                 'lg' => 2,         // Due colonne su desktop
             ])
                 ->schema([
-                    Forms\Components\Section::make()
-                        ->columns([
-                            'default' => 1,
-                            'sm' => 1,
-                            'md' => 2,
-                            'lg' => 2,
-                        ])
-                        ->schema([
-                            Forms\Components\TextInput::make('numero_pratica')
-                                ->label('Numero Pratica')
-                                ->disabled()
-                                ->dehydrated(false)
-                                ->visible(fn($record) => $record !== null),
-                            Forms\Components\TextInput::make('nome')
-                                ->required(config('pratica-form.required_fields.nome'))
-                                ->maxLength(255),
-                            Forms\Components\Select::make('tipologia')
-                                ->options(config('pratica-form.tipologie'))
-                                ->required(config('pratica-form.required_fields.tipologia')),
 
-                            Forms\Components\TextInput::make('competenza')
-                                ->required(config('pratica-form.required_fields.competenza'))
-                                ->maxLength(255),
+                    Forms\Components\TextInput::make('numero_pratica')
+                        ->label('Numero Pratica')
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->visible(fn($record) => $record !== null),
+                    Forms\Components\TextInput::make('nome')
+                        ->required(config('pratica-form.required_fields.nome'))
 
-                            Forms\Components\Select::make('team_id')
-                                ->relationship('team', 'name', fn($query) => $query->where('personal_team', false))
+                        ->maxLength(255),
+                    Forms\Components\Select::make('tipologia')
+                        ->options(config('pratica-form.tipologie'))
+
+                        ->required(config('pratica-form.required_fields.tipologia')),
+
+                    Forms\Components\TextInput::make('competenza')
+                        ->required(config('pratica-form.required_fields.competenza'))
+
+                        ->maxLength(255),
+
+                    Forms\Components\Select::make('team_id')
+                        ->relationship('team', 'name', fn($query) => $query->where('personal_team', false))
+                        ->required()
+                        ->preload()
+                        ->searchable()
+                        // nascosto se non si è crate o edit
+                        ->visibleOn(['create', 'edit'])
+                        ->label('Gruppo')
+                        ->placeholder('Seleziona un gruppo')
+                        ->createOptionForm([
+                            Forms\Components\TextInput::make('name')
                                 ->required()
-                                ->preload()
-                                ->searchable()
-                                ->label('Gruppo')
-                                ->placeholder('Seleziona un gruppo')
-                                ->createOptionForm([
-                                    Forms\Components\TextInput::make('name')
-                                        ->required()
-                                        ->maxLength(255)
-                                        ->label('Nome del gruppo')
-                                        ->unique(Team::class, 'name'),
-                                ])
-                                ->createOptionUsing(function (array $data, Forms\Components\Select $component) {
-                                    $team = Auth::user()->ownedTeams()->create([
-                                        'name' => $data['name'],
-                                        'personal_team' => false,
-                                    ]);
-
-                                    // Aggiorna le opzioni del select dopo la creazione
-                                    $component->state($team->id);
-
-                                    // Forza il refresh delle opzioni
-                                    $component->options(
-                                        Team::where('personal_team', false)
-                                            ->pluck('name', 'id')
-                                            ->toArray()
-                                    );
-
-                                    return $team->id; // Ritorna l'ID invece dell'oggetto
-                                })
-                                ->afterStateUpdated(function ($state, Forms\Components\Select $component) {
-                                    // Verifica che il valore sia valido
-                                    if ($state && !Team::find($state)) {
-                                        $component->state(null);
-                                    }
-                                })
-                                ->loadingMessage('Caricamento gruppi...')
-                                ->noSearchResultsMessage('Nessun gruppo trovato')
-                                ->createOptionModalHeading('Crea nuovo gruppo')
-
-
+                                ->maxLength(255)
+                                ->label('Nome del gruppo')
+                                ->unique(Team::class, 'name'),
                         ])
-                    ,
+                        ->createOptionUsing(function (array $data, Forms\Components\Select $component) {
+                            $team = Auth::user()->ownedTeams()->create([
+                                'name' => $data['name'],
+                                'personal_team' => false,
+                            ]);
 
-                    Forms\Components\Section::make()
-                        ->columns([
-                            'default' => 1,
-                            'sm' => 1,
-                            'md' => 2,
-                            'lg' => 2,
-                        ])
-                        ->schema([
-                            Forms\Components\TextInput::make('ruolo_generale')
-                                ->required(config('pratica-form.required_fields.ruolo_generale'))
-                                ->maxLength(255),
-                            Forms\Components\TextInput::make('giudice')
-                                ->required(config('pratica-form.required_fields.giudice'))
-                                ->maxLength(255),
-                            Forms\Components\Select::make('stato')
-                                ->required(config('pratica-form.required_fields.stato'))
-                                ->options(config('pratica-form.stati'))
-                                ->default('aperto'),
+                            // Aggiorna le opzioni del select dopo la creazione
+                            $component->state($team->id);
 
-                        ])
-                    ,
+                            // Forza il refresh delle opzioni
+                            $component->options(
+                                Team::where('personal_team', false)
+                                    ->pluck('name', 'id')
+                                    ->toArray()
+                            );
 
-                    Forms\Components\Section::make('Note Aggiuntive')
-                        ->columns([
-                            'default' => 1,
-                            'sm' => 1,
-                            'md' => 2,
-                            'lg' => 2,
-                        ])
-                        ->schema([
-                            Forms\Components\Textarea::make('altri_riferimenti')
-                                ->maxLength(65535)
-                                ->columnSpanFull(),
-                        ])
-                    ,
+                            return $team->id; // Ritorna l'ID invece dell'oggetto
+                        })
+                        ->afterStateUpdated(function ($state, Forms\Components\Select $component) {
+                            // Verifica che il valore sia valido
+                            if ($state && !Team::find($state)) {
+                                $component->state(null);
+                            }
+                        })
+                        ->loadingMessage('Caricamento gruppi...')
+                        ->noSearchResultsMessage('Nessun gruppo trovato')
+                        ->createOptionModalHeading('Crea nuovo gruppo'),
+
+                    Forms\Components\Select::make('utenti_extra')
+                        ->multiple()
+                        ->visibleOn(['create', 'edit'])
+                        ->label('Utenti Aggiuntivi')
+                        ->relationship(
+                            'utenti_extra',
+                            'id',
+                        )
+                        ->getOptionLabelFromRecordUsing(function ($record) {
+                            // get name
+                            return $record->name;
+                        })
+                        ->options(function () {
+                            // get only avvocti role
+                            return
+                                User::query()
+                                    ->whereHas('roles', function ($query) {
+                                        // Avvocato, Segreteria, Coordinatore, Cliente
+                                        $query->whereIn('name', ['Avvocato', 'Segreteria', 'Coordinatore', 'Cliente']);
+                                    })
+                                    ->get()
+                                    ->pluck('name', 'id');
+                        }),
+
+
+                    Forms\Components\TextInput::make('ruolo_generale')
+                        ->required(config('pratica-form.required_fields.ruolo_generale'))
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('giudice')
+                        ->required(config('pratica-form.required_fields.giudice'))
+                        ->maxLength(255),
+                    Forms\Components\Select::make('stato')
+                        ->required(config('pratica-form.required_fields.stato'))
+                        ->options(config('pratica-form.stati'))
+                        ->default('aperto'),
+
+                    Forms\Components\Textarea::make('altri_riferimenti')
+                        ->maxLength(65535)
+                        ->columnSpanFull(),
                 ])
         ];
     }
@@ -180,24 +179,24 @@ trait HasPraticaForm
     }
 
     // scadenze
-    protected static function getScadenzeSchema(): array
-    {
-        return [
-            Forms\Components\Grid::make([
-                'default' => 1,    // Una colonna su mobile
-                'sm' => 1,         // Una colonna su schermi piccoli
-                'md' => 2,         // Due colonne su tablet
-                'lg' => 2,         // Due colonne su desktop
-            ])
-                ->schema([
-                    Forms\Components\DateTimePicker::make('data_ora')
-                        ->required()
-                    ,
-                    Forms\Components\TextInput::make('motivo')
-                        ->required(),
-                ]),
-        ];
-    }
+   /// protected static function getScadenzeSchema(): array
+   /// {
+   ///     return [
+   ///         Forms\Components\Grid::make([
+   ///             'default' => 1,    // Una colonna su mobile
+   ///             'sm' => 1,         // Una colonna su schermi piccoli
+   ///             'md' => 2,         // Due colonne su tablet
+   ///             'lg' => 2,         // Due colonne su desktop
+   ///         ])
+   ///             ->schema([
+   ///                 Forms\Components\DateTimePicker::make('data_ora')
+   ///                     ->required()
+   ///                 ,
+   ///                 Forms\Components\TextInput::make('motivo')
+   ///                     ->required(),
+   ///             ]),
+   ///     ];
+   /// }
 
     protected static function getNoteSchema(): array
     {
@@ -215,6 +214,9 @@ trait HasPraticaForm
                 ->required(),
             Forms\Components\Select::make('visibilita')
                 ->options(config('pratica-form.visibilita_note'))
+                // ->hint('Pubblica: visibile a tutti gli utenti della pratica. Privato: visibile solo all\'utente che ha creato la nota.')
+                //->hintIcon('heroicon-m-question-mark-circle', tooltip: 'Need some more information?')
+                ->helperText('Pubblica: visibile a tutti gli utenti della pratica. Privato: visibile solo all\'utente che ha creato la nota.')
                 ->required(),
         ];
     }

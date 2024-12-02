@@ -17,29 +17,6 @@ return [
         'lunghezza_numero' => 3,
         'numero_partenza' => 1,
         'prefissi_tipo' => [
-            'prefissi' => [
-                // 'Civile' => 'CIV',
-                // 'Penale' => 'PEN',
-                // 'Amministrativo' => 'AMM',
-                // 'Tributario' => 'TRI',
-                // 'Lavoro' => 'LAV',
-                // 'Famiglia' => 'FAM',
-                // 'Societario' => 'SOC',
-                // 'Immigrazione' => 'IMM',
-                // 'Condominio' => 'CON',
-                // 'Successioni' => 'SUC',
-                // 'Fallimentare' => 'FAL',
-                // 'Esecuzioni' => 'ESE',
-                // 'Mediazione' => 'MED',
-                // 'Volontaria Giurisdizione' => 'VOL',
-                // 'Infortunistica' => 'INF',
-                // 'Recupero Crediti' => 'REC',
-                // 'Contrattualistica' => 'CTR',
-                // 'Proprietà Intellettuale' => 'IPR',
-                // 'Privacy/GDPR' => 'PRV',
-                // 'Altro' => 'ALT',
-                'default' => 'STD'
-            ],
             'default' => 'STD'
         ],
         'componenti' => [

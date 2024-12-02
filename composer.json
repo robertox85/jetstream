@@ -9,6 +9,7 @@
         "bezhansalleh/filament-shield": "^3.3",
         "discoverydesign/filament-gaze": "^1.1",
         "filament/filament": "^3.2",
+        "google/apiclient": "^2.15.0",
         "laravel/framework": "^11.9",
         "laravel/jetstream": "^5.3",
         "laravel/sanctum": "^4.0",

@@ -13,8 +13,8 @@ return new class extends Migration
     {
         // Add Contabilita field to Pratica, and Lavorazione field to Pratica. Is a varchar field.
         Schema::table('pratiche', function (Blueprint $table) {
-            $table->string('contabilita')->nullable();
-            $table->string('lavorazione')->nullable();
+            $table->longText('contabilita')->nullable();
+            $table->longText('lavorazione')->nullable();
         });
     }
 

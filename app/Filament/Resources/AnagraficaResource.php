@@ -26,7 +26,7 @@ class AnagraficaResource extends Resource
     protected static ?string $pluralModelLabel = 'Anagrafiche';
 
     protected static ?string $slug = 'anagrafiche';
-    protected static ?string $navigationGroup = 'Anagrafiche';
+    protected static ?string $navigationGroup = 'Amministrazione';
     protected static ?int $navigationSort = 100;
 
 
