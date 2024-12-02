@@ -32,6 +32,11 @@ class AppuntamentoResource extends Resource
     protected static ?int $navigationSort = 2;
 
 
+    // get only appuntamenti
+    public static function getEloquentQuery(): Builder
+    {
+        return static::getModel()::query()->where('tipo', 'appuntamento');
+    }
     public static function form(Form $form): Form
     {
         return $form
