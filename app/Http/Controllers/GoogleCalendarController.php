@@ -26,7 +26,7 @@ class GoogleCalendarController extends Controller
             return redirect()->to('admin/calendario')
                 ->with('success', 'Google Calendar collegato con successo');
         }
-        return redirect()->route('calendar.index')
+        return redirect()->to('admin/calendario')
             ->with('error', 'Errore nella connessione con Google Calendar');
     }
 }
