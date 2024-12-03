@@ -30,6 +30,7 @@ class EventoObserver
         }
 
         $createdEvent = $googleCalendar->createEvent($evento);
+
         $evento->update(['google_event_id' => $createdEvent->id]);
 
         $url = 'admin/calendario';

@@ -13,7 +13,7 @@ use Filament\Tables\Table;
 trait HasEventoForm
 {
 
-    public static function getEventoForm($tipo = 'scadenza')
+    public static function getEventoForm($tipo = 'scadenza', ?array $defaultData = null)
     {
         /**
          * pratica_id
@@ -99,7 +99,7 @@ trait HasEventoForm
                                 $set('data', Carbon::parse($dataOra)->format('Y-m-d'));
                             }
                         })
-                        ->default(now()->format('Y-m-d')),
+                        ->default($defaultData['data'] ?? Carbon::now()->format('Y-m-d')),
 
                     Forms\Components\TimePicker::make('ora')
                         ->label('Orario')
@@ -111,7 +111,7 @@ trait HasEventoForm
                                 );
                             }
                         })
-                        ->default(Carbon::parse(now(), 'Europe/Rome')->format('H:i')),
+                        ->default($defaultOra['ora'] ?? Carbon::now()->format('H:i')),
 
 
                     Forms\Components\TextInput::make('luogo')

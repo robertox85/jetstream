@@ -3,13 +3,20 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\EventoResource;
+use App\Filament\Resources\PraticaResource;
 use App\Models\Evento;
 use App\Services\GoogleCalendarService;
 use App\Traits\HasEventoForm;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Carbon;
@@ -20,6 +27,8 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 class CalendarioWidget extends FullCalendarWidget
 {
     use HasEventoForm;
+
+    protected $selectedDate = null;
 
     public GoogleCalendarService $googleCalendar;
 
@@ -75,7 +84,7 @@ class CalendarioWidget extends FullCalendarWidget
         ];
 
         // get eventi with user_id or assigned_to = user_id. If admin or superadmin or segreteria, get all events
-        if(auth()->user()->hasRole('Amministratore') || auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('Segreteria')) {
+        if (auth()->user()->hasRole('Amministratore') || auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('Segreteria')) {
             $eventi = Evento::all();
         } else {
             $eventi = Evento::where('user_id', auth()->id())
@@ -101,9 +110,36 @@ class CalendarioWidget extends FullCalendarWidget
         return $eventi->toArray();
     }
 
+    public function onDateSelect(string $start, ?string $end, bool $allDay, ?array $view, ?array $resource): void
+    {
+
+        $this->selectedDate = Carbon::parse($start);
+
+        $this->mountAction('create', [
+            'data' => $this->selectedDate->format('Y-m-d'),
+            'ora' => $this->selectedDate->format('H:i'),
+        ]);
+
+        $this->mountAction('edit', [
+            'data' => $this->selectedDate->format('Y-m-d'),
+            'ora' => $this->selectedDate->format('H:i'),
+        ]);
+
+
+
+    }
+
+
     public function getFormSchema(): array
     {
-        return static::getEventoForm();
+        $defaultData = [
+            'data' => $this->selectedDate ? $this->selectedDate->format('Y-m-d') : null,
+            'ora' => $this->selectedDate ? $this->selectedDate->format('H:i') : null,
+        ];
+
+        return static::getEventoForm('appuntamento', $defaultData);
+
+
     }
 
     // Gestisce il drag & drop dell'evento
