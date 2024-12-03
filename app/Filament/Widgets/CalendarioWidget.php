@@ -36,13 +36,15 @@ class CalendarioWidget extends FullCalendarWidget
 
     public function config(): array
     {
+        $googleCalendar = app(GoogleCalendarService::class);
+        $isConnected = true;
 
         return [
             'initialView' => 'dayGridMonth',
             'locale' => 'it',
             'firstDay' => 1,
             'headerToolbar' => [
-                'left' => 'dayGridMonth,timeGridWeek,timeGridDay googleConnect',  // Aggiunto googleConnect
+                'left' => 'dayGridMonth,timeGridWeek,timeGridDay googleConnect',
                 'center' => 'title',
                 'right' => 'prev,next today',
             ],
@@ -51,8 +53,8 @@ class CalendarioWidget extends FullCalendarWidget
             'dayMaxEvents' => true,
             'customButtons' => [
                 'googleConnect' => [
-                    'text' => 'Google',
-                    'click' => new \stdClass(), // Questo evita l'errore della funzione
+                    'text' => $isConnected ? 'Connesso a Google' : 'Connetti Google',
+                    'click' => new \stdClass(),
                 ],
             ],
         ];
@@ -61,6 +63,8 @@ class CalendarioWidget extends FullCalendarWidget
     public function eventDidMount(): string
     {
         $route = route('google.connect');
+        $googleCalendar = app(GoogleCalendarService::class);
+        $isConnected = $googleCalendar->isConnected();
         return <<<JS
         function({ event, el }) {
             // Gestione normale degli eventi
@@ -68,9 +72,20 @@ class CalendarioWidget extends FullCalendarWidget
             el.setAttribute("x-data", "{ tooltip: '"+event.title+"' }");
             
             // Aggiungi il click handler per il pulsante Google
-            document.querySelector('.fc-googleConnect-button').onclick = function() {
-                window.location.href = '$route';
-            };
+            let googleButton = document.querySelector('.fc-googleConnect-button');
+            // if text 'Connesso a Google' is present, disable the button
+            let isDisabled = googleButton && googleButton.innerText === 'Connesso a Google';
+            if (googleButton) {
+                googleButton.onclick = function() {
+                    window.location.href = '$route';
+                };
+            }
+            if (isDisabled) {
+                googleButton.disabled = true;
+                googleButton.style.opacity = '0.6';
+                googleButton.style.cursor = 'not-allowed';
+            }
+            
         }
     JS;
     }
