@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\GoogleCalendarService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 
 class GoogleCalendarController extends Controller
 {
@@ -17,6 +18,12 @@ class GoogleCalendarController extends Controller
     public function connect()
     {
         return redirect($this->calendarService->getAuthUrl());
+    }
+
+    public function disconnect()
+    {
+        Session::forget('google_token');
+        return redirect()->back()->with('success', 'Disconnesso da Google Calendar');
     }
 
     public function callback(Request $request)
