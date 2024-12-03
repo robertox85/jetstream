@@ -20,3 +20,4 @@ Route::middleware([
 
 Route::get('admin/google/connect', [GoogleCalendarController::class, 'connect'])->name('google.connect');
 Route::get('admin/google/callback', [GoogleCalendarController::class, 'callback'])->name('google.callback');
+Route::get('admin/google/disconnect', [GoogleCalendarController::class, 'disconnect'])->name('google.disconnect');

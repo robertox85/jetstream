@@ -37,14 +37,18 @@ class CalendarioWidget extends FullCalendarWidget
     public function config(): array
     {
         $googleCalendar = app(GoogleCalendarService::class);
-        $isConnected = true;
+        $isConnected = $googleCalendar->isConnected();
+
+        // Determina quale bottone mostrare nella toolbar
+        $googleButton = $isConnected ? 'googleDisconnect' : 'googleConnect';
+
 
         return [
             'initialView' => 'dayGridMonth',
             'locale' => 'it',
             'firstDay' => 1,
             'headerToolbar' => [
-                'left' => 'dayGridMonth,timeGridWeek,timeGridDay googleConnect',
+                'left' => "dayGridMonth,timeGridWeek,timeGridDay {$googleButton}",
                 'center' => 'title',
                 'right' => 'prev,next today',
             ],
@@ -53,7 +57,11 @@ class CalendarioWidget extends FullCalendarWidget
             'dayMaxEvents' => true,
             'customButtons' => [
                 'googleConnect' => [
-                    'text' => $isConnected ? 'Connesso a Google' : 'Connetti Google',
+                    'text' => 'Connetti Google',
+                    'click' => new \stdClass(),
+                ],
+                'googleDisconnect' => [
+                    'text' => 'Disconnetti Google',
                     'click' => new \stdClass(),
                 ],
             ],
@@ -62,31 +70,37 @@ class CalendarioWidget extends FullCalendarWidget
 
     public function eventDidMount(): string
     {
-        $route = route('google.connect');
+        $connectRoute = route('google.connect');
+        $disconnectRoute = route('google.disconnect');
         $googleCalendar = app(GoogleCalendarService::class);
-        $isConnected = $googleCalendar->isConnected();
+        $isConnected = $googleCalendar->isConnected() ? 'true' : 'false';
+
+
         return <<<JS
-        function({ event, el }) {
-            // Gestione normale degli eventi
-            el.setAttribute("x-tooltip", "tooltip");
-            el.setAttribute("x-data", "{ tooltip: '"+event.title+"' }");
-            
-            // Aggiungi il click handler per il pulsante Google
-            let googleButton = document.querySelector('.fc-googleConnect-button');
-            // if text 'Connesso a Google' is present, disable the button
-            let isDisabled = googleButton && googleButton.innerText === 'Connesso a Google';
-            if (googleButton) {
-                googleButton.onclick = function() {
-                    window.location.href = '$route';
-                };
+    function({ event, el }) {
+        // Tooltip base per gli eventi
+        el.setAttribute("x-tooltip", "tooltip");
+        el.setAttribute("x-data", "{ tooltip: '"+event.title+"' }");
+        
+        // Gestione bottoni Google
+        setTimeout(function() {
+            if ($isConnected) {
+                const disconnectButton = document.querySelector('.fc-googleDisconnect-button');
+                if (disconnectButton) {
+                    disconnectButton.onclick = function() {
+                        window.location.href = '$disconnectRoute';
+                    }
+                }
+            } else {
+                const connectButton = document.querySelector('.fc-googleConnect-button');
+                if (connectButton) {
+                    connectButton.onclick = function() {
+                        window.location.href = '$connectRoute';
+                    }
+                }
             }
-            if (isDisabled) {
-                googleButton.disabled = true;
-                googleButton.style.opacity = '0.6';
-                googleButton.style.cursor = 'not-allowed';
-            }
-            
-        }
+        }, 0);
+    }
     JS;
     }
 
