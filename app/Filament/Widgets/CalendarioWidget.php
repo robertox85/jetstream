@@ -21,11 +21,13 @@ class CalendarioWidget extends FullCalendarWidget
 {
     use HasEventoForm;
 
+    public GoogleCalendarService $googleCalendar;
 
     public string|null|\Illuminate\Database\Eloquent\Model $model = Evento::class;
 
     public function config(): array
     {
+
         return [
             'initialView' => 'dayGridMonth',
             'locale' => 'it',
@@ -40,7 +42,7 @@ class CalendarioWidget extends FullCalendarWidget
             'dayMaxEvents' => true,
             'customButtons' => [
                 'googleConnect' => [
-                    'text' => 'Connetti Google',
+                    'text' => 'Google',
                     'click' => new \stdClass(), // Questo evita l'errore della funzione
                 ],
             ],
@@ -64,26 +66,6 @@ class CalendarioWidget extends FullCalendarWidget
     JS;
     }
 
-
-    public function syncWithGoogleCalendar(): \Livewire\Features\SupportRedirects\Redirector
-    {
-        $googleCalendar = app(GoogleCalendarService::class);
-
-        if (!$googleCalendar->isConnected()) {
-            // return redirect()->to($googleCalendar->getAuthUrl());
-            Log::info('Google Calendar non connesso');
-            Log::info($googleCalendar->getAuthUrl());
-            return new \Livewire\Features\SupportRedirects\Redirector($googleCalendar->getAuthUrl());
-        }
-
-        Notification::make()
-            ->success()
-            ->title('Già connesso a Google Calendar')
-            ->send();
-
-        return new \Livewire\Features\SupportRedirects\Redirector(route('filament.dashboard'));
-    }
-
     public function fetchEvents(array $info): array
     {
         $colori = [
@@ -92,7 +74,16 @@ class CalendarioWidget extends FullCalendarWidget
             'appuntamento' => '#28a745',
         ];
 
-        $eventi = Evento::all()->map(function ($evento) use ($colori) {
+        // get eventi with user_id or assigned_to = user_id. If admin or superadmin or segreteria, get all events
+        if(auth()->user()->hasRole('Amministratore') || auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('Segreteria')) {
+            $eventi = Evento::all();
+        } else {
+            $eventi = Evento::where('user_id', auth()->id())
+                ->orWhere('assigned_to', auth()->id())
+                ->get();
+        }
+
+        $eventi = $eventi->map(function ($evento) use ($colori) {
             $pratica = $evento->pratica;
 
             return [
@@ -122,7 +113,7 @@ class CalendarioWidget extends FullCalendarWidget
         if ($evento) {
 
             $evento->update([
-                'data_ora' => $event['start']
+                'data_ora' => $event['start'],
             ]);
         }
 

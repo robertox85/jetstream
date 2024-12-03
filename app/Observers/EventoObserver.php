@@ -32,7 +32,8 @@ class EventoObserver
         $createdEvent = $googleCalendar->createEvent($evento);
         $evento->update(['google_event_id' => $createdEvent->id]);
 
-        return redirect()->route('eventi.index')->with('success', 'Evento creato con successo');
+        $url = 'admin/calendario';
+        return redirect()->route($url);
     }
 
     /**

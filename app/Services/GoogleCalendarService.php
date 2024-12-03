@@ -48,6 +48,8 @@ class GoogleCalendarService
     {
         $service = new Google_Service_Calendar($this->client);
 
+        Log::info('Evento: ' . json_encode($evento));
+
         $attendees = [];
         if ($evento->assignedTo) {
             $attendees[] = ['email' => $evento->assignedTo->email];
