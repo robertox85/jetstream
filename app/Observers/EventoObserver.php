@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Evento;
 use App\Services\GoogleCalendarService;
+use Filament\Notifications\Notification;
 use Google\Exception;
 use Google_Client;
 use Google_Service_Calendar;
@@ -21,20 +22,34 @@ class EventoObserver
      * @throws Exception
      * @throws Google\Service\Exception
      */
-    public function createGoogleCalendarEvent(Evento $evento): \Illuminate\Http\RedirectResponse
+    public function createGoogleCalendarEvent(Evento $evento): void
     {
-        $googleCalendar = app(GoogleCalendarService::class);
+       try {
+           $googleCalendar = app(GoogleCalendarService::class);
 
-        if (!$googleCalendar->isConnected()) {
-            return redirect()->route('google.connect');
-        }
+           if (!$googleCalendar->isConnected()) {
+               Notification::make()
+                   ->danger()
+                   ->title('Google Calendar non collegato')
+                   ->send();
+           }
 
-        $createdEvent = $googleCalendar->createEvent($evento);
+           $createdEvent = $googleCalendar->createEvent($evento);
 
-        $evento->update(['google_event_id' => $createdEvent->id]);
+           $evento->update(['google_event_id' => $createdEvent->id]);
 
-        $url = 'admin/calendario';
-        return redirect()->route($url);
+           // Usa le notifiche di Filament invece del redirect
+           Notification::make()
+               ->success()
+               ->title('Evento creato su Google Calendar')
+               ->send();
+       } catch (Exception $e) {
+           Log::error($e->getMessage());
+           Notification::make()
+               ->danger()
+               ->title('Errore nella creazione dell\'evento su Google Calendar')
+               ->send();
+       }
     }
 
     /**

@@ -16,21 +16,36 @@ class GoogleCalendarService
     public function __construct()
     {
         $this->client = new Google_Client();
-        $this->client->setClientId(config('services.google.client_id'));
-        $this->client->setClientSecret(config('services.google.client_secret'));
-        $this->client->setRedirectUri(config('services.google.redirect'));
-        $this->client->addScope(Google_Service_Calendar::CALENDAR_EVENTS);
 
-        if (Session::has('google_token')) {
-            $token = Session::get('google_token');
-            Log::info('Token: ' . json_encode($token));
-            $this->client->setAccessToken(Session::get('google_token'));
+        if (app()->environment('local') && config('services.google.test_token')) {
+            Log::info('Using test token');
+            $this->client->setAccessToken([
+                'access_token' => config('services.google.test_token'),
+                'expires_in' => 3600,
+                'created' => time(),
+            ]);
+        } else {
+            $this->client->setClientId(config('services.google.client_id'));
+            $this->client->setClientSecret(config('services.google.client_secret'));
+            $this->client->setRedirectUri(config('services.google.redirect'));
+            $this->client->addScope(Google_Service_Calendar::CALENDAR_EVENTS);
+
+            if (Session::has('google_token')) {
+                $token = Session::get('google_token');
+                Log::info('Token: ' . json_encode($token));
+                $this->client->setAccessToken(Session::get('google_token'));
+            }
         }
     }
 
     public function isConnected()
     {
-        return Session::has('google_token');
+        // Considera anche il token di test
+        if (app()->environment('local') && config('services.google.test_token')) {
+            return true;
+        }
+
+        return Session::has('google_token') && $this->client->getAccessToken();
     }
 
     public function getAuthUrl(): string
@@ -47,8 +62,6 @@ class GoogleCalendarService
     public function createEvent($evento): Event
     {
         $service = new Google_Service_Calendar($this->client);
-
-        Log::info('Evento: ' . json_encode($evento));
 
         $attendees = [];
         if ($evento->assignedTo) {
