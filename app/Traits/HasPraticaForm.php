@@ -30,10 +30,12 @@ trait HasPraticaForm
                         ->disabled()
                         ->dehydrated(false)
                         ->visible(fn($record) => $record !== null),
+
                     Forms\Components\TextInput::make('nome')
                         ->required(config('pratica-form.required_fields.nome'))
-
-                        ->maxLength(255),
+                        ->unique()
+                        ->maxLength(255)
+                    ,
                     Forms\Components\Select::make('tipologia')
                         ->options(config('pratica-form.tipologie'))
 
