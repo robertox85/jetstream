@@ -5,29 +5,15 @@ namespace App\Traits;
 use App\Filament\Resources\PraticaResource;
 use Carbon\Carbon;
 use Filament\Forms;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Form;
 use Filament\Tables;
-use Filament\Tables\Table;
+use Illuminate\Support\Facades\Log;
 
 trait HasEventoForm
 {
 
     public static function getEventoForm($tipo = 'scadenza', ?array $defaultData = null)
     {
-        /**
-         * pratica_id
-         * user_id
-         * assigned_to
-         * tipo
-         * data_ora
-         * motivo
-         * luogo
-         * stato
-         * reminder_at
-         * email_notification
-         * browser_notification
-         */
+        $defaultData = $defaultData ?? [];
 
         $isPraticaResource = static::class === PraticaResource::class;
 
@@ -39,7 +25,7 @@ trait HasEventoForm
                     Forms\Components\Select::make('pratica_id')
                         ->label('Pratica')
                         ->searchable()
-                        ->required()
+                        ->required($tipo !== 'appuntamento')
                         ->preload()
                         ->relationship('pratica', 'nome')
                         ->hidden(fn() => $isPraticaResource),
@@ -53,12 +39,14 @@ trait HasEventoForm
                         ->default(auth()->id()),
 
 
-                    Forms\Components\Select::make('assigned_to')
-                        ->label('Assegnato a')
-                        ->searchable()
+                    // Nel form
+                    Forms\Components\Select::make('invitati')
+                        ->multiple()
+                        ->label('Invitati')
+                        ->relationship('invitati', 'name')
                         ->preload()
-                        ->default(auth()->id())
-                        ->relationship('user', 'name'),
+                        ->searchable()
+                        ,
 
                     Forms\Components\Hidden::make('tipo')
                         ->default($tipo)
@@ -90,33 +78,48 @@ trait HasEventoForm
                             'annullata' => 'Annullato',
                         ]),
 
-                    // Fill the data_ora field with the concatenation of the data and ora fields
                     Forms\Components\DatePicker::make('data')
                         ->label('Data')
                         ->required()
                         ->afterStateHydrated(function ($state, callable $set, callable $get) {
-                            if ($dataOra = $get('data_ora')) {
-                                $set('data', Carbon::parse($dataOra)->format('Y-m-d'));
+                            $data_ora = $get('data_ora') ?? null;
+                            if ($data_ora) {
+                                $set('data', Carbon::parse($data_ora)->format('Y-m-d'));
                             }
                         })
-                        ->default($defaultData['data'] ?? Carbon::now()->format('Y-m-d')),
+                        ->default($defaultData['data'] ?? Carbon::now()->format('Y-m-d'))
+                        ->live()
+                        ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                            $data = $state ?? null;
+                            $ora = $get('ora') ?? null;
+                            if ($data && $ora) {
+                                $set('data_ora', Carbon::parse($data . ' ' . $ora)->format('Y-m-d H:i:s'));
+                            }
+                        }),
 
                     Forms\Components\TimePicker::make('ora')
                         ->label('Orario')
                         ->required()
                         ->afterStateHydrated(function ($state, callable $set, callable $get) {
-                            if ($dataOra = $get('data_ora')) {
-                                $set('ora',
-                                    Carbon::parse($dataOra, 'Europe/Rome')->format('H:i')
-                                );
+                            $data_ora = $get('data_ora') ?? null;
+                            if ($data_ora) {
+                                $set('ora', Carbon::parse($data_ora)->format('H:i:s'));
                             }
                         })
-                        ->default($defaultOra['ora'] ?? Carbon::now()->format('H:i')),
+                        ->default($defaultOra['ora'] ?? Carbon::now()->format('H:i:s'))
+                        ->live()
+                        ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                            $data = $get('data') ?? null;
+                            $ora = $state ?? null;
 
+                            if ($data && $ora) {
+                                $set('data_ora', Carbon::parse($data . ' ' . $ora)->format('Y-m-d H:i:s'));
+                            }
+                        }),
 
-                    Forms\Components\TextInput::make('luogo')
-                        ->label('Luogo')
-                        ->live(),
+                    Forms\Components\Hidden::make('data_ora')
+                        ->default($defaultData['data_ora'] ?? Carbon::now()->format('Y-m-d H:i:s')),
+
 
                     Forms\Components\Textarea::make('motivo')
                         ->label('Motivo')
@@ -136,8 +139,9 @@ trait HasEventoForm
                 ->label('Pratica'),
             Tables\Columns\TextColumn::make('user.name')
                 ->label('Creato da'),
-            Tables\Columns\TextColumn::make('assigned_to')
-                ->label('Assegnato a')
+
+            Tables\Columns\TextColumn::make('invitati')
+                ->label('Invitati')
                 ->toggleable()
                 ->toggledHiddenByDefault(true),
 

@@ -4,17 +4,14 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\AppuntamentoResource\Pages;
 use App\Filament\Resources\AppuntamentoResource\RelationManagers;
-use App\Models\Appuntamento;
 use App\Models\Evento;
 use App\Traits\HasEventoForm;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class AppuntamentoResource extends Resource
 {
@@ -37,16 +34,20 @@ class AppuntamentoResource extends Resource
     {
         return static::getModel()::query()->where('tipo', 'appuntamento');
     }
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema(static::getEventoForm('appuntamento'));
+
     }
+
+
 
     public static function table(Table $table): Table
     {
         return $table
-            ->columns(static::getTableColumns( 'appuntamento' ))
+            ->columns(static::getTableColumns('appuntamento'))
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
             ])
@@ -54,12 +55,12 @@ class AppuntamentoResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
                     ->requiresConfirmation()
-                    ->modalHeading('Sei sicuro di voler eliminare questa controparte? Questa azione è irreversibile.')
+                    ->modalHeading('Sei sicuro di voler eliminare questo appuntamento? Questa azione è irreversibile.')
                     ->successNotification(
                         Notification::make()
                             ->success()
-                            ->title('Controparte eliminata')
-                            ->body('La controparte è stata eliminata con successo.')
+                            ->title('Appuntamento eliminato')
+                            ->body('L\'appuntamento è stato eliminato con successo.')
                     ),
             ])
             ->bulkActions([
@@ -71,6 +72,7 @@ class AppuntamentoResource extends Resource
             ->paginated([100, 150, 'all'])
             ->defaultPaginationPageOption(100);
     }
+
 
 
     public static function getRelations(): array

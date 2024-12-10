@@ -22,9 +22,7 @@ class UdienzaImporter extends Importer
                 ->requiredMapping()
                 ->numeric()
                 ->rules(['required', 'integer']),
-            ImportColumn::make('assigned_to')
-                ->numeric()
-                ->rules(['integer']),
+
             ImportColumn::make('data_ora')
                 ->requiredMapping()
                 ->rules(['required', 'datetime']),

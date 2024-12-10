@@ -2,46 +2,50 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Resources\EventoResource;
-use App\Filament\Resources\PraticaResource;
 use App\Models\Evento;
+use App\Models\EventoInvitati;
 use App\Services\GoogleCalendarService;
 use App\Traits\HasEventoForm;
 use Filament\Actions\Action;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\TimePicker;
-use Filament\Forms\Form;
+use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class CalendarioWidget extends FullCalendarWidget
 {
     use HasEventoForm;
 
-    protected $selectedDate = null;
+    protected bool $notifica = false;
+    protected ?string $selectedDate = null;
+    protected ?string $selectedTime = null;
+    protected ?int $selectedEventId = null;
+    protected bool $isConnected;
+    protected GoogleCalendarService $googleCalendarService;
 
-    public GoogleCalendarService $googleCalendar;
+    public string|null|Model $model = Evento::class;
 
-    public string|null|\Illuminate\Database\Eloquent\Model $model = Evento::class;
+    public function __construct()
+    {
+        $this->googleCalendarService = app(GoogleCalendarService::class);
+        $this->isConnected = $this->googleCalendarService->isConnected();
+
+        if (!$this->isConnected) {
+            Filament::registerRenderHook(
+                'panels::body.start',
+                fn(): string => view('filament.components.google-calendar-banner', [
+                    'connectRoute' => route('google.connect')
+                ])->render(),
+            );
+        }
+    }
 
     public function config(): array
     {
-        $googleCalendar = app(GoogleCalendarService::class);
-        $isConnected = $googleCalendar->isConnected();
-
-        // Determina quale bottone mostrare nella toolbar
-        $googleButton = $isConnected ? 'googleDisconnect' : 'googleConnect';
-
+        $googleButton = $this->isConnected ? 'googleDisconnect' : 'googleConnect';
 
         return [
             'initialView' => 'dayGridMonth',
@@ -50,61 +54,283 @@ class CalendarioWidget extends FullCalendarWidget
             'headerToolbar' => [
                 'left' => "dayGridMonth,timeGridWeek,timeGridDay {$googleButton}",
                 'center' => 'title',
-                'right' => 'prev,next today',
+                'right' => 'today prev,next',
             ],
             'editable' => true,
             'selectable' => true,
             'dayMaxEvents' => true,
-            'customButtons' => [
-                'googleConnect' => [
-                    'text' => 'Connetti Google',
-                    'click' => new \stdClass(),
-                ],
-                'googleDisconnect' => [
-                    'text' => 'Disconnetti Google',
-                    'click' => new \stdClass(),
-                ],
+            'customButtons' => $this->getCustomButtons(),
+        ];
+    }
+
+    protected function getCustomButtons(): array
+    {
+        return [
+            'googleConnect' => [
+                'text' => 'Connetti Google',
+                'click' => new \stdClass()
+            ],
+            'googleDisconnect' => [
+                'text' => 'Disconnetti Google',
+                'click' => new \stdClass(),
             ],
         ];
     }
 
+
+    protected function headerActions(): array
+    {
+        return [
+            ...parent::headerActions(),
+            $this->getSyncAllEventsAction(),
+        ];
+    }
+
+    protected function modalActions(): array
+    {
+        return [
+            ...parent::modalActions(),
+            $this->getViewOnGoogleAction(),
+            $this->getSyncEventAction(),
+            $this->getDeleteFromGoogleAction(),
+        ];
+    }
+
+
+    protected function getViewOnGoogleAction(): Action
+    {
+        return Action::make('viewOnGoogle')
+            ->label('Visualizza su Google')
+            ->visible(fn(Model $record) => $record->google_event_id)
+            ->tooltip('Visualizza questo evento su Google Calendar')
+            ->action(fn(Model $record) => $this->viewOnGoogle($record));
+    }
+
+    public function viewOnGoogle(Model $evento)
+    {
+        return redirect()->away($evento->google_event_link);
+    }
+
+
+    protected function getDeleteFromGoogleAction(): Action
+    {
+        return Action::make('deleteFromGoogle')
+            ->label('Elimina da Google')
+            ->requiresConfirmation()
+            ->visible(fn(Model $record) => $record->google_event_id)
+            ->tooltip('Elimina questo evento da Google Calendar')
+            ->disabled(fn() => !$this->isConnected)
+            ->action(fn(Model $record) => $this->deleteFromGoogle($record));
+    }
+
+    public function deleteFromGoogle(Model $evento): void
+    {
+        $this->googleCalendarService->deleteEvent($evento->google_event_id);
+    }
+
+    protected function getSyncEventAction(): Action
+    {
+        return Action::make('syncEvent')
+            ->label('Sincronizza su Google')
+            ->requiresConfirmation()
+            ->visible(fn(Model $record) => !$record->google_event_id)
+            ->tooltip('Crea questo evento su Google Calendar')
+            ->disabled(fn() => !$this->isConnected)
+            ->action(fn(Model $record) => $this->syncEvent($record));
+    }
+
+    public function syncEvent(Model $evento): void
+    {
+        $this->googleCalendarService->createEvent($evento);
+    }
+
+    protected function getSyncAllEventsAction(): Action
+    {
+        return Action::make('syncAllEvents')
+            ->label('Sincronizza tutti gli eventi')
+            ->requiresConfirmation()
+            ->tooltip('Sincronizza tutti gli eventi con Google Calendar')
+            ->disabled(fn() => !$this->isConnected)
+            ->action(function () {
+
+                // Recupera tutti gli eventi non sincronizzati
+                $eventi = Evento::where('google_event_id', null)->get();
+
+                // Sincronizza tutti gli eventi con Google Calendar
+                $eventi->each(fn($evento) => $this->googleCalendarService->createEvent($evento));
+
+                // Ricarica il widget per visualizzare gli eventi sincronizzati
+                Notification::make()
+                    ->success()
+                    ->title('Eventi sincronizzati con Google Calendar')
+                    ->send();
+
+                $this->refreshRecords();
+            });
+    }
+
     public function eventDidMount(): string
     {
-        $connectRoute = route('google.connect');
-        $disconnectRoute = route('google.disconnect');
-        $googleCalendar = app(GoogleCalendarService::class);
-        $isConnected = $googleCalendar->isConnected() ? 'true' : 'false';
 
+        return $this->getEventMountJavaScript(
+            route('google.connect'),
+            route('google.disconnect'),
+            $this->isConnected ? 'true' : 'false'  // Convert boolean to string
+        );
+    }
+
+    protected function getEventMountJavaScript(string $connectRoute, string $disconnectRoute, bool $isConnected): string
+    {
 
         return <<<JS
-    function({ event, el }) {
-        // Tooltip base per gli eventi
-        el.setAttribute("x-tooltip", "tooltip");
-        el.setAttribute("x-data", "{ tooltip: '"+event.title+"' }");
-        
-        // Gestione bottoni Google
-        setTimeout(function() {
-            if ($isConnected) {
-                const disconnectButton = document.querySelector('.fc-googleDisconnect-button');
-                if (disconnectButton) {
-                    disconnectButton.onclick = function() {
-                        window.location.href = '$disconnectRoute';
-                    }
-                }
-            } else {
-                const connectButton = document.querySelector('.fc-googleConnect-button');
-                if (connectButton) {
-                    connectButton.onclick = function() {
-                        window.location.href = '$connectRoute';
-                    }
+function({ event, el }) {
+    
+    // Funzione per formattare la data in italiano
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('it-IT', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // Gestione stato invitati con colori
+    let invitatsList = '';
+    if (event.extendedProps.invitati) {
+        event.extendedProps.invitati.forEach(function(invitato) {
+            let statusClass = 'text-gray-500';
+            let statusIcon = '○';
+            let statusText = 'In attesa';
+            
+            if (invitato.status === 'accepted' || invitato.status === 'yes') {
+                statusIcon = '✓';
+                statusClass = 'text-green-600';
+                statusText = 'Confermato';
+            } else if (invitato.status === 'declined' || invitato.status === 'no') {
+                statusIcon = '✗';
+                statusClass = 'text-red-600';
+                statusText = 'Rifiutato';
+            } else if (invitato.status === 'tentative' || invitato.status === 'maybe') {
+                statusIcon = '?';
+                statusClass = 'text-yellow-600';
+                statusText = 'Forse';
+            }
+            
+            invitatsList += 
+                '<div class="flex items-center justify-between py-1 border-b border-gray-100 last:border-0">' +
+                    '<span class="text-sm text-gray-700">' + invitato.nome + '</span>' +
+                    '<span class="' + statusClass + ' text-sm ml-2">' + statusIcon + ' ' + statusText + '</span>' +
+                '</div>';
+        });
+    }
+
+    // Determina il tipo di evento e il suo colore/icona
+    let tipoEvento = '';
+    let tipoIcon = '';
+    switch(event.extendedProps.tipo) {
+        case 'udienza':
+            tipoEvento = 'Udienza';
+            tipoIcon = '⚖️';
+            break;
+        case 'scadenza':
+            tipoEvento = 'Scadenza';
+            tipoIcon = '⏰';
+            break;
+        case 'appuntamento':
+            tipoEvento = 'Appuntamento';
+            tipoIcon = '📅';
+            break;
+        default:
+            tipoEvento = 'Evento';
+            tipoIcon = '📌';
+    }
+    
+    // Costruisce il contenuto del tooltip con tutti i dettagli
+    const tooltipContent = 
+        '<div class="p-4 max-w-sm bg-white rounded shadow-lg">' +
+            '<div class="flex items-center justify-between mb-2">' +
+                '<div class="font-bold text-gray-900">' + event.title + '</div>' +
+                '<div class="text-sm text-gray-500 flex w-full justify-end">' + tipoIcon + ' ' + tipoEvento + '</div>' +
+            '</div>' +
+            
+            '<div class="text-sm text-gray-600 mb-3">' +
+                '<div class="mb-1">' + formatDate(event.start) + '</div>' +
+                '<div class="' + (event.extendedProps.isSynced ? 'text-green-600' : 'text-gray-500') + '">' +
+                    (event.extendedProps.isSynced ? '✓ Sincronizzato con Google Calendar' : '○ Non sincronizzato') +
+                '</div>' +
+            '</div>' +
+            
+            (event.extendedProps.note ? 
+                '<div class="mb-3 text-sm text-gray-700 border-l-2 border-gray-200 pl-2">' + 
+                    event.extendedProps.note + 
+                '</div>' : ''
+            ) +
+            
+            (event.extendedProps.invitati.length > 0 ? 
+                '<div class="border-t border-gray-100 pt-2 mt-2">' +
+                    '<div class="text-sm font-medium text-gray-700 mb-1">Partecipanti</div>' +
+                    invitatsList +
+                '</div>' : ''
+            ) +
+        '</div>';
+     // Applica il tooltip con configurazione per HTML
+    el.setAttribute("x-tooltip", "tooltip");
+    el.setAttribute("x-data", "{ tooltip: { content: '" + tooltipContent + "', allowHTML: true } }");
+    
+    // Gestione bottoni Google
+    setTimeout(function() {
+        const isConnected = {$isConnected};  // JavaScript will receive the actual string 'true' or 'false'
+        if (isConnected) {
+            const disconnectButton = document.querySelector('.fc-googleDisconnect-button');
+            console.log('disconnect' + disconnectButton);
+            if (disconnectButton) {
+                disconnectButton.onclick = function() {
+                    window.location.href = '$disconnectRoute';
                 }
             }
-        }, 0);
-    }
-    JS;
+        } else {
+            const connectButton = document.querySelector('.fc-googleConnect-button');
+            console.log('connect' + connectButton);
+            if (connectButton) {
+                connectButton.onclick = function() {
+                    window.location.href = '$connectRoute';
+                }
+            }
+        }
+    }, 0);
+}
+JS;
     }
 
     public function fetchEvents(array $info): array
+    {
+        $eventi = $this->getFilteredEvents();
+        return $this->formatEvents($eventi);
+    }
+
+    protected function getFilteredEvents()
+    {
+        if ($this->isAdminUser()) {
+            return Evento::all();
+        }
+
+        return Evento::where('user_id', auth()->id())
+            ->orWhereHas('invitati', function ($query) {
+                $query->where('user_id', auth()->id());
+            })
+            ->get();
+    }
+
+    protected function isAdminUser(): bool
+    {
+        return auth()->user()->hasRole(['Amministratore', 'super_admin', 'Segreteria']);
+    }
+
+    protected function formatEvents($eventi): array
     {
         $colori = [
             'udienza' => '#007bff',
@@ -112,77 +338,96 @@ class CalendarioWidget extends FullCalendarWidget
             'appuntamento' => '#28a745',
         ];
 
-        // get eventi with user_id or assigned_to = user_id. If admin or superadmin or segreteria, get all events
-        if (auth()->user()->hasRole('Amministratore') || auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('Segreteria')) {
-            $eventi = Evento::all();
-        } else {
-            $eventi = Evento::where('user_id', auth()->id())
-                ->orWhere('assigned_to', auth()->id())
-                ->get();
-        }
-
-        $eventi = $eventi->map(function ($evento) use ($colori) {
-            $pratica = $evento->pratica;
-
+        return $eventi->map(function ($evento) use ($colori) {
             return [
                 'id' => $evento->id,
-                'title' => $evento->tipo . ' - ' . $pratica->numero_pratica . ' - ' . $evento->luogo,
+                'title' => $this->formatEventTitle($evento),
                 'start' => $evento->data_ora,
                 'end' => $evento->data_ora,
-                'backgroundColor' => $colori[$evento->tipo],
-                'extendedProps' => [
-                    'evento_id' => $evento->id,
-                ],
+                'backgroundColor' => $colori[$evento->tipo] ?? '#6c757d',
+                'extendedProps' => $this->getEventExtendedProps($evento),
             ];
-        });
+        })->toArray();
+    }
 
-        return $eventi->toArray();
+    protected function formatEventTitle($evento): string
+    {
+        return $evento->pratica
+            ? "{$evento->tipo} - {$evento->pratica->numero_pratica}"
+            : $evento->tipo;
+    }
+
+    protected function getEventExtendedProps($evento): array
+    {
+        return [
+            'evento_id' => $evento->id,
+            'isSynced' => (bool)$evento->google_event_id,
+            'pratica_id' => $evento->pratica_id,
+            'invitati' => $this->formatInvitati($evento),
+            'tipo' => $evento->tipo,
+        ];
+    }
+
+    protected function formatInvitati($evento): array
+    {
+        return $evento->invitati->map(function ($invitato) use ($evento) {
+            return [
+                'nome' => $invitato->name,
+                'status' => $this->googleCalendarService->getAttendeeStatus($evento, $invitato->email),
+            ];
+        })->toArray();
     }
 
     public function onDateSelect(string $start, ?string $end, bool $allDay, ?array $view, ?array $resource): void
     {
-
-        $this->selectedDate = Carbon::parse($start);
+        $dateTime = Carbon::parse($start);
+        $this->selectedDate = $dateTime->format('Y-m-d');
+        $this->selectedTime = now()->format('H:i:s');
 
         $this->mountAction('create', [
-            'data' => $this->selectedDate->format('Y-m-d'),
-            'ora' => $this->selectedDate->format('H:i'),
+            'data' => $this->selectedDate,
+            'ora' => $this->selectedTime,
+            'data_ora' => $dateTime->format('Y-m-d H:i:s')
         ]);
-
-        $this->mountAction('edit', [
-            'data' => $this->selectedDate->format('Y-m-d'),
-            'ora' => $this->selectedDate->format('H:i'),
-        ]);
-
-
-
     }
 
-
-    public function getFormSchema(): array
-    {
-        $defaultData = [
-            'data' => $this->selectedDate ? $this->selectedDate->format('Y-m-d') : null,
-            'ora' => $this->selectedDate ? $this->selectedDate->format('H:i') : null,
-        ];
-
-        return static::getEventoForm('appuntamento', $defaultData);
-
-
-    }
-
-    // Gestisce il drag & drop dell'evento
     public function onEventDrop(array $event, array $oldEvent, array $relatedEvents, array $delta, ?array $oldResource, ?array $newResource): bool
     {
         $evento = Evento::find($event['id']);
-        if ($evento) {
 
-            $evento->update([
-                'data_ora' => $event['start'],
-            ]);
+        if (!$evento) {
+            return false;
         }
 
-        return false;
+        $updated = $evento->update([
+            'data_ora' => Carbon::parse($event['start'])->format('Y-m-d H:i:s')
+        ]);
+
+        if ($updated) {
+            // Notifica l'utente del successo
+            Notification::make()
+                ->success()
+                ->title('Evento spostato con successo')
+                ->send();
+
+            $this->refreshRecords();
+        }
+
+        return $updated;
     }
 
+    public function getFormSchema(): array
+    {
+        $defaultData = [];
+
+        if ($this->selectedDate && $this->selectedTime) {
+            $defaultData = [
+                'data' => $this->selectedDate,
+                'ora' => $this->selectedTime,
+                'data_ora' => "{$this->selectedDate} {$this->selectedTime}",
+            ];
+        }
+
+        return static::getEventoForm('appuntamento', $defaultData);
+    }
 }

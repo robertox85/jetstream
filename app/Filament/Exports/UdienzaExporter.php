@@ -18,7 +18,7 @@ class UdienzaExporter extends Exporter
                 ->label('ID'),
             ExportColumn::make('pratica_id'),
             ExportColumn::make('user_id'),
-            ExportColumn::make('assigned_to'),
+
             ExportColumn::make('data_ora'),
             ExportColumn::make('motivo'),
             ExportColumn::make('luogo'),
