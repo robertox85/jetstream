@@ -4,24 +4,21 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UdienzaResource\Pages;
 use App\Filament\Resources\UdienzaResource\RelationManagers;
-use App\Models\Pratica;
-use App\Models\Udienza;
+use App\Models\Evento;
 use App\Traits\HasEventoForm;
 use App\Traits\HasTeamAuthorizationScope;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UdienzaResource extends Resource
 {
     use HasEventoForm;
 
-    protected static ?string $model = Udienza::class;
+    protected static ?string $model = Evento::class;
 
     //  protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -37,7 +34,7 @@ class UdienzaResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return static::getPraticaBasedQuery();
+        return static::getModel()::query()->where('tipo', 'udienza');
     }
 
     public static function form(Form $form): Form
@@ -57,12 +54,12 @@ class UdienzaResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
                     ->requiresConfirmation()
-                    ->modalHeading('Sei sicuro di voler eliminare questa controparte? Questa azione è irreversibile.')
+                    ->modalHeading('Sei sicuro di voler eliminare questa udienza? Questa azione è irreversibile.')
                     ->successNotification(
                         Notification::make()
                             ->success()
-                            ->title('Controparte eliminata')
-                            ->body('La controparte è stata eliminata con successo.')
+                            ->title('Udienza eliminata')
+                            ->body('L\'udienza è stata eliminata con successo.')
                     ),
             ])
             ->bulkActions([

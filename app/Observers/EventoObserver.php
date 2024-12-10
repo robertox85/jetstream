@@ -6,51 +6,12 @@ use App\Models\Evento;
 use App\Services\GoogleCalendarService;
 use Filament\Notifications\Notification;
 use Google\Exception;
-use Google_Client;
-use Google_Service_Calendar;
-use Google_Service_Calendar_Event;
 use Illuminate\Support\Facades\Log;
-use Google\Client;
-use Google\Service\Calendar;
 
 
 class EventoObserver
 {
-
-
-    /**
-     * @throws Exception
-     * @throws Google\Service\Exception
-     */
-    public function createGoogleCalendarEvent(Evento $evento): void
-    {
-       try {
-           $googleCalendar = app(GoogleCalendarService::class);
-
-           if (!$googleCalendar->isConnected()) {
-               Notification::make()
-                   ->danger()
-                   ->title('Google Calendar non collegato')
-                   ->send();
-           }
-
-           $createdEvent = $googleCalendar->createEvent($evento);
-
-           $evento->update(['google_event_id' => $createdEvent->id]);
-
-           // Usa le notifiche di Filament invece del redirect
-           Notification::make()
-               ->success()
-               ->title('Evento creato su Google Calendar')
-               ->send();
-       } catch (Exception $e) {
-           Log::error($e->getMessage());
-           Notification::make()
-               ->danger()
-               ->title('Errore nella creazione dell\'evento su Google Calendar')
-               ->send();
-       }
-    }
+    private bool $isSyncing = false;
 
     /**
      * Handle the Evento "created" event.
@@ -58,15 +19,58 @@ class EventoObserver
      */
     public function created(Evento $evento): void
     {
-        $this->createGoogleCalendarEvent($evento);
+        if ($this->isSyncing) {
+            return;
+        }
+
+        try {
+            $this->isSyncing = true;
+            $googleCalendar = app(GoogleCalendarService::class);
+
+            if ($googleCalendar->isConnected()) {
+                $googleCalendar->createEvent($evento);
+            }
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
+            Notification::make()
+                ->danger()
+                ->title('Errore nell\'aggiornamento dell\'evento su Google Calendar (created) ')
+                ->send();
+        } finally {
+            $this->isSyncing = false;
+        }
+
+
     }
 
     /**
      * Handle the Evento "updated" event.
+     * @throws Exception
      */
     public function updated(Evento $evento): void
     {
-        //
+        if ($this->isSyncing) {
+            return;
+        }
+
+        try {
+            $this->isSyncing = true;
+
+            $googleCalendar = app(GoogleCalendarService::class);
+
+            if ($googleCalendar->isConnected()) {
+                $googleCalendar->updateEvent($evento);
+            }
+
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
+            Notification::make()
+                ->danger()
+                ->title('Errore nell\'aggiornamento dell\'evento su Google Calendar (updated) ')
+                ->send();
+        } finally {
+            $this->isSyncing = false;
+        }
     }
 
     /**
@@ -74,7 +78,7 @@ class EventoObserver
      */
     public function deleted(Evento $evento): void
     {
-        //
+        $this->deleteGoogleCalendarEvent($evento);
     }
 
     /**
@@ -91,5 +95,45 @@ class EventoObserver
     public function forceDeleted(Evento $evento): void
     {
         //
+    }
+
+    private function deleteGoogleCalendarEvent(Evento $evento)
+    {
+        try {
+            $googleCalendar = app(GoogleCalendarService::class);
+
+            if (!$googleCalendar->isConnected()) {
+                Notification::make()
+                    ->danger()
+                    ->title('Google Calendar non collegato')
+                    ->send();
+            }
+
+            $googleEventId = $evento->google_event_id;
+            if (!$googleEventId) {
+                Notification::make()
+                    ->danger()
+                    ->title('Evento non trovato su Google Calendar')
+                    ->send();
+            }
+
+            $googleCalendar->deleteEvent($googleEventId);
+
+            // Usa le notifiche di Filament invece del redirect
+            Notification::make()
+                ->success()
+                ->title('Evento cancellato da Google Calendar')
+                ->send();
+
+        } catch (Exception $e) {
+
+            Log::error($e->getMessage());
+
+            Notification::make()
+                ->danger()
+                ->title('Errore nella cancellazione dell\'evento su Google Calendar')
+                ->send();
+
+        }
     }
 }

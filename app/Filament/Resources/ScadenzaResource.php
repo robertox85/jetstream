@@ -4,26 +4,21 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ScadenzaResource\Pages;
 use App\Filament\Resources\ScadenzaResource\RelationManagers;
-use App\Models\AnagraficaPratica;
-use App\Models\Pratica;
-use App\Models\Scadenza;
+use App\Models\Evento;
 use App\Traits\HasEventoForm;
 use App\Traits\HasTeamAuthorizationScope;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Log;
 
 class ScadenzaResource extends Resource
 {
     use HasEventoForm;
 
-    protected static ?string $model = Scadenza::class;
+    protected static ?string $model = Evento::class;
 
     //  protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -39,7 +34,7 @@ class ScadenzaResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return static::getPraticaBasedQuery();
+        return static::getModel()::query()->where('tipo', 'scadenza');
     }
 
     public static function form(Form $form): Form
@@ -59,12 +54,12 @@ class ScadenzaResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
                     ->requiresConfirmation()
-                    ->modalHeading('Sei sicuro di voler eliminare questa controparte? Questa azione è irreversibile.')
+                    ->modalHeading('Sei sicuro di voler eliminare questa scadenza? Questa azione è irreversibile.')
                     ->successNotification(
                         Notification::make()
                             ->success()
-                            ->title('Controparte eliminata')
-                            ->body('La controparte è stata eliminata con successo.')
+                            ->title('Scadenza eliminata')
+                            ->body('La scadenza è stata eliminata con successo.')
                     ),
             ])
             ->bulkActions([

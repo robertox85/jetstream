@@ -202,6 +202,12 @@ class User extends Authenticatable
     {
         return $this->praticheUtenti->contains($pratica);
     }
-    // detach user from owned teams if user is updated
+
+    public function eventi()
+    {
+        return $this->belongsToMany(Evento::class, 'evento_invitati')
+            ->using(EventoInvitati::class)
+            ->withTimestamps();
+    }
 
 }

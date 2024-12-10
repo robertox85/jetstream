@@ -3,19 +3,31 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\CalendarioWidget;
+use App\Traits\HasEventoForm;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
+use Filament\Actions\Action;
 
 class Calendario extends Page
 {
+    use HasEventoForm;
+
 //    protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static string $view = 'filament.pages.calendario';
 
     protected static ?string $navigationGroup = 'Agenda';
 
-    // can view only 'admin' users
+    public $defaultAction = 'onboarding';
 
+    public $selectedDate = null;
+    public $selectedTime = null;
+
+    public function onboardingAction(): Action
+    {
+        // Usarlo per indicare se la Connessione a Google Calendar è attiva
+        return Action::make('onboarding')->modalHeading('Welcome')->visible(fn () => false);
+    }
     public static function canAccess(): bool
     {
         // false if is 'Cliente'
@@ -34,4 +46,6 @@ class Calendario extends Page
             CalendarioWidget::class,
         ];
     }
+
+
 }

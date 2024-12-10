@@ -4,13 +4,9 @@ namespace App\Providers;
 
 use App\Models\Evento;
 use App\Observers\EventoObserver;
-use Filament\Support\Assets\Js;
-use Filament\Support\Facades\FilamentAsset;
-use Filament\Tables\Table;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Permission;
 use App\Models\Role;
-use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,9 +29,6 @@ class AppServiceProvider extends ServiceProvider
         //
         // Observe Evento model
         Evento::observe(EventoObserver::class);
-
-
-
     }
 
 }
