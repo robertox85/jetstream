@@ -33,7 +33,7 @@ trait HasPraticaForm
 
                     Forms\Components\TextInput::make('nome')
                         ->required(config('pratica-form.required_fields.nome'))
-                        ->unique()
+                        ->unique(ignoreRecord: true)
                         ->maxLength(255)
                     ,
                     Forms\Components\Select::make('tipologia')
