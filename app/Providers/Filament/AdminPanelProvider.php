@@ -10,6 +10,7 @@ use App\Filament\Resources\PraticaResource;
 use App\Filament\Resources\ScadenzaResource;
 use App\Filament\Resources\UdienzaResource;
 use App\Http\Middleware\CheckIfBanned;
+use App\Http\Middleware\RestrictPraticaFiles;
 use App\Models\Anagrafica;
 use DiscoveryDesign\FilamentGaze\FilamentGazePlugin;
 use Filament\Http\Middleware\Authenticate;
@@ -143,8 +144,10 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                CheckIfBanned::class
+                CheckIfBanned::class,
+                // RestrictPraticaFiles::class
             ])
+
             ->plugins([
                 FilamentShieldPlugin::make(),
                 FilamentUsersPlugin::make(),

@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\GoogleCalendarController;
+use App\Http\Middleware\RestrictPraticaFiles;
 use Illuminate\Support\Facades\Route;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use UniSharp\LaravelFilemanager\Lfm;
 
 Route::get('/', function () {
     return view('welcome');
@@ -16,6 +19,15 @@ Route::middleware([
         return view('dashboard');
     })->name('dashboard');
 });
+
+Route::group(['prefix' => 'laravel-filemanager/{pratica}', 'middleware' => ['web', 'auth']], function () {
+    Lfm::routes();
+});
+
+Route::group(['prefix' => 'filemanager/{pratica}', 'middleware' => ['web', 'auth']], function () {
+    Lfm::routes();
+});
+
 
 
 Route::get('admin/google/connect', [GoogleCalendarController::class, 'connect'])->name('google.connect');

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Overtrue\LaravelVersionable\Versionable;
 use Overtrue\LaravelVersionable\VersionStrategy;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 
 class Pratica extends Model
@@ -21,7 +22,7 @@ class Pratica extends Model
     use HasImportExportActions;
     use SoftDeletes;
     use Versionable;
-
+use InteractsWithMedia;
 
     protected $versionable = ['nome', 'tipologia', 'competenza', 'ruolo_generale', 'giudice', 'stato', 'altri_riferimenti', 'priority', 'data_apertura', 'team_id', 'lavorazione', 'contabilita'];
 
@@ -337,5 +338,8 @@ class Pratica extends Model
         CAST(SUBSTRING_INDEX(numero_pratica, '-', -1) AS UNSIGNED) {$direction}
     ");
     }
+
+
+
 
 }

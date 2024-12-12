@@ -3,6 +3,8 @@ Richieste:
 - Ottimizzare la ricerca delle pratiche
 - Ottimizza export excel pratiche
 
+- campo permessi speciali pratica - clienti e avvocati singoli possono avere permessi speciali su una pratica
+
 FATTO
 - gestione dei filtri nelle tabelle (es. pratiche, anagrafiche)
 - cambiare numero_pratica - deve seguire  il cronologico di tutte le pratiche
