@@ -23,6 +23,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
+use Filament\Pages\Actions\ButtonAction;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\RestoreAction;
@@ -78,6 +79,23 @@ class PraticaResource extends Resource
                             ->disabledOn('view')
                             ->icon('heroicon-m-information-circle')
                             ->schema(static::getInformazioniPrincipaliSchema()),
+
+                        // Tab Media
+                        Forms\Components\Tabs\Tab::make('Documenti')
+                            ->visibleOn(['create', 'edit'])
+                            ->icon('heroicon-m-document')
+
+                            ->schema([
+
+
+                                Forms\Components\View::make('components.file-browser'),
+                                // Forms\Components\View::make('vendor.laravel-filemanager.use'),
+                                // Forms\Components\Actions::make([
+                                //     Forms\Components\Actions\Action::make('Generate excerpt')
+                                //         ->action(fn () => redirect('/laravel-filemanager?type=file'))
+                                // ]),
+                            ]),
+
 
                         // Tab Scadenze
                         Forms\Components\Tabs\Tab::make('Scadenze')

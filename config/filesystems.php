@@ -30,6 +30,8 @@ return [
 
     'disks' => [
 
+
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
@@ -59,11 +61,22 @@ return [
 
         'pratiche' => [
             'driver' => 'local',
-            'root' => storage_path('app/pratiche'),
-            'url' => env('APP_URL').'/pratiche',
+            'root' => storage_path('app/private/pratiche'),
             'visibility' => 'private',
-            'throw' => false,
         ],
+
+       // 'pratiche' => [
+       //     'driver' => 'ftp',
+       //     'host' => env('FTP_HOST', 'ftp.example.com'),
+       //     'username' => env('FTP_USERNAME'),
+       //     'password' => env('FTP_PASSWORD'),
+       //     'port' => env('FTP_PORT', 21),
+       //     'root' => env('FTP_ROOT', '/'),
+       //     'passive' => false,
+       //     'ssl' => false,
+       //     'timeout' => 30,
+       //     'visibility' => 'private',
+       // ],
 
         'nas' => [
             'driver' => 'sftp', // oppure 'ftp' se il NAS non supporta SFTP

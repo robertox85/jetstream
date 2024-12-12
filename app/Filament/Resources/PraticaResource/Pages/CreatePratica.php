@@ -11,4 +11,7 @@ class CreatePratica extends CreateRecord
     protected static string $resource = PraticaResource::class;
 
     protected ?string $maxContentWidth = 'full';
+
+
 }
+

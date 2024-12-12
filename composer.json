@@ -14,13 +14,16 @@
         "laravel/jetstream": "^5.3",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
+        "league/flysystem-ftp": "^3.29",
         "league/flysystem-sftp-v3": "^3.29",
         "livewire/livewire": "^3.0",
         "mansoor/filament-versionable": "^0.0.11",
         "saade/filament-fullcalendar": "^3.0",
         "spatie/laravel-activitylog": "^4.9",
+        "spatie/laravel-medialibrary": "^11.11",
         "stechstudio/filament-impersonate": "^3.14",
         "tomatophp/filament-users": "^2.0",
+        "unisharp/laravel-filemanager": "^2.9",
         "z3d0x/filament-logger": "^0.7.2"
     },
     "require-dev": {
