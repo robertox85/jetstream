@@ -35,7 +35,7 @@ class CalendarioWidget extends FullCalendarWidget
 
         // if user is 'Segreteria' or 'Amministratore' show notification
 
-        if (auth()->user()->hasRole(['Segreteria', 'Amministratore','super_admin'])) {
+        if (auth()->user()->hasRole(['Segreteria', 'Amministratore', 'super_admin'])) {
             if (!$this->isConnected) {
                 Filament::registerRenderHook(
                     'panels::body.start',
@@ -84,20 +84,31 @@ class CalendarioWidget extends FullCalendarWidget
 
     protected function headerActions(): array
     {
+        if (auth()->user()->hasRole(['Segreteria', 'Amministratore', 'super_admin'])) {
+            return [
+                ...parent::headerActions(),
+                $this->getConnectionAction(),
+                $this->getSyncAllEventsAction(),
+            ];
+        }
+
         return [
-            ...parent::headerActions(),
-            $this->getConnectionAction(),
-            $this->getSyncAllEventsAction(),
+            ...parent::headerActions()
         ];
     }
 
     protected function modalActions(): array
     {
+        if(auth()->user()->hasRole(['Segreteria', 'Amministratore', 'super_admin'])) {
+            return [
+                ...parent::modalActions(),
+                $this->getViewOnGoogleAction(),
+                $this->getSyncEventAction(),
+                $this->getDeleteFromGoogleAction(),
+            ];
+        }
         return [
-            ...parent::modalActions(),
-            $this->getViewOnGoogleAction(),
-            $this->getSyncEventAction(),
-            $this->getDeleteFromGoogleAction(),
+            ...parent::modalActions()
         ];
     }
 
