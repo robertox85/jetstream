@@ -33,13 +33,17 @@ class CalendarioWidget extends FullCalendarWidget
         $this->googleCalendarService = app(GoogleCalendarService::class);
         $this->isConnected = $this->googleCalendarService->isConnected();
 
-        if (!$this->isConnected) {
-            Filament::registerRenderHook(
-                'panels::body.start',
-                fn(): string => view('filament.components.google-calendar-banner', [
-                    'connectRoute' => route('google.connect')
-                ])->render(),
-            );
+        // if user is 'Segreteria' or 'Amministratore' show notification
+
+        if (auth()->user()->hasRole(['Segreteria', 'Amministratore','super_admin'])) {
+            if (!$this->isConnected) {
+                Filament::registerRenderHook(
+                    'panels::body.start',
+                    fn(): string => view('filament.components.google-calendar-banner', [
+                        'connectRoute' => route('google.connect')
+                    ])->render(),
+                );
+            }
         }
     }
 
@@ -52,7 +56,7 @@ class CalendarioWidget extends FullCalendarWidget
             'locale' => 'it',
             'firstDay' => 1,
             'headerToolbar' => [
-                'left' => "dayGridMonth,timeGridWeek,timeGridDay {$googleButton}",
+                'left' => "dayGridMonth,timeGridWeek,timeGridDay listWeek",
                 'center' => 'title',
                 'right' => 'today prev,next',
             ],
@@ -82,6 +86,7 @@ class CalendarioWidget extends FullCalendarWidget
     {
         return [
             ...parent::headerActions(),
+            $this->getConnectionAction(),
             $this->getSyncAllEventsAction(),
         ];
     }
@@ -144,13 +149,31 @@ class CalendarioWidget extends FullCalendarWidget
         $this->googleCalendarService->createEvent($evento);
     }
 
+    protected function getConnectionAction(): Action
+    {
+        return Action::make('googleConnect')
+            ->label('Connetti Google')
+            ->visible(fn() => !$this->isConnected)
+            ->tooltip('Connetti il tuo account Google Calendar')
+            ->action(fn() => $this->googleCalendarService->connect());
+    }
+
+    protected function getDisconnectAction(): Action
+    {
+        return Action::make('googleDisconnect')
+            ->label('Disconnetti Google')
+            ->visible(fn() => $this->isConnected)
+            ->tooltip('Disconnetti il tuo account Google Calendar')
+            ->action(fn() => $this->googleCalendarService->disconnect());
+    }
+
     protected function getSyncAllEventsAction(): Action
     {
         return Action::make('syncAllEvents')
             ->label('Sincronizza tutti gli eventi')
             ->requiresConfirmation()
             ->tooltip('Sincronizza tutti gli eventi con Google Calendar')
-            ->disabled(fn() => !$this->isConnected)
+            ->visible(fn() => $this->isConnected)
             ->action(function () {
 
                 // Recupera tutti gli eventi non sincronizzati

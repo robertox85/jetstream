@@ -236,6 +236,13 @@ class GoogleCalendarService
         Session::forget('google_token');
     }
 
+    // link to google calendar
+    // route('google.connect')
+    public function connect()
+    {
+        return redirect($this->getAuthUrl());
+    }
+
     // get attendeeStatus
     public function getAttendeeStatus(Evento $evento, $email): string
     {
