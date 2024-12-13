@@ -10,21 +10,16 @@ use App\Filament\Resources\PraticaResource;
 use App\Filament\Resources\ScadenzaResource;
 use App\Filament\Resources\UdienzaResource;
 use App\Http\Middleware\CheckIfBanned;
-use App\Http\Middleware\RestrictPraticaFiles;
-use App\Models\Anagrafica;
 use DiscoveryDesign\FilamentGaze\FilamentGazePlugin;
 use Filament\Http\Middleware\Authenticate;
-use BezhanSalleh\FilamentShield\Middleware\SyncShieldTenant;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
-use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -32,8 +27,6 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-
-// use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 use TomatoPHP\FilamentUsers\FilamentUsersPlugin;
 
@@ -145,7 +138,7 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
                 CheckIfBanned::class,
-                // RestrictPraticaFiles::class
+
             ])
 
             ->plugins([

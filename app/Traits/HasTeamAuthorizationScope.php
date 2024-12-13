@@ -127,6 +127,15 @@ trait HasTeamAuthorizationScope
             });
         }
 
+        // Per i clienti, restituisce solo le pratiche in cui sono coinvolti
+        if ($user->hasRole('Cliente')) {
+            return $query->whereExists(function($subquery) use ($user) {
+                $subquery->from('pratiche_utenti')
+                    ->whereColumn('pratiche_utenti.pratica_id', 'pratiche.id')
+                    ->where('pratiche_utenti.user_id', $user->id);
+            });
+        }
+
         // Per tutti gli altri utenti
         return $query->where(function($q) use ($user) {
             $q->whereIn('team_id', $user->teams->pluck('id'))

@@ -514,9 +514,13 @@ class PraticaResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\TrashedFilter::make(),
+                // hidden if cliente
+                Tables\Filters\TrashedFilter::make()
+                ->hidden(function () { return auth()->user()->hasRole('Cliente'); }),
+
 
                 Tables\Filters\SelectFilter::make('team_id')
+                    ->hidden(function () { return auth()->user()->hasRole('Cliente'); })
                     ->label('Gruppo')
                     ->options(
                         Team::all()->pluck('name', 'id')
@@ -524,12 +528,14 @@ class PraticaResource extends Resource
                     ->searchable(),
 
                 Tables\Filters\SelectFilter::make('tipologia')
+                    ->hidden(function () { return auth()->user()->hasRole('Cliente'); })
                     ->label('Tipologia')
                     ->options(config('pratica-form.tipologie'))
                     ->preload()
                     ->searchable(),
 
                 Tables\Filters\SelectFilter::make('stato')
+                    ->hidden(function () { return auth()->user()->hasRole('Cliente'); })
                     ->label('Stato')
                     ->options(config('pratica-form.stati'))
                     ->preload()

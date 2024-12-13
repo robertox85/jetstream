@@ -106,6 +106,7 @@ class User extends Authenticatable
     }
 
 
+
     public function praticheUtenti()
     {
         return $this->belongsToMany(Pratica::class, 'pratiche_utenti')
@@ -186,13 +187,13 @@ class User extends Authenticatable
         return $this->is_banned;
     }
 
-    public function ban()
+    public function ban(): void
     {
         $this->is_banned = true;
         $this->save();
     }
 
-    public function unban()
+    public function unban(): void
     {
         $this->is_banned = false;
         $this->save();

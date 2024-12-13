@@ -47,10 +47,10 @@ return [
 
     'folder_categories'        => [
         'file'  => [
-            'folder_name'  => 'files',
+            'folder_name'  => 'pratiche',
             'startup_view' => 'list', // list or grid
             'max_size'     => 50000, // size in KB
-            'thumb' => true,
+            'thumb' => false,
             'thumb_width' => 80,
             'thumb_height' => 80,
             'valid_mime'   => [
@@ -100,6 +100,7 @@ return [
     //     return "pratiche/{$praticaId}";
     // },
 
+
     'disk' => 'pratiche',
 
     'rename_file'              => false,
@@ -126,7 +127,8 @@ return [
     'disallowed_extensions' => ['php', 'html'],
 
     // Item Columns
-    'item_columns' => ['name', 'url', 'time', 'icon', 'is_file', 'is_image', 'thumb_url'],
+    // workaround per lavorare con le sottocartelle: rimuovere 'time'
+    'item_columns' => ['name', 'url', 'icon', 'is_file', 'is_image', 'thumb_url'],
 
     /*
     |--------------------------------------------------------------------------
