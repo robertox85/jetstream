@@ -29,6 +29,12 @@ class EventoObserver
 
             if ($googleCalendar->isConnected()) {
                 $googleCalendar->createEvent($evento);
+
+                // Usa le notifiche di Filament invece del redirect
+                Notification::make()
+                    ->success()
+                    ->title('Evento aggiunto a Google Calendar')
+                    ->send();
             }
         } catch (Exception $e) {
             Log::error($e->getMessage());

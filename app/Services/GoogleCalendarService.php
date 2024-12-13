@@ -13,6 +13,7 @@ use Google_Service_Calendar_EventAttendee;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Mockery\Matcher\Not;
 
 class GoogleCalendarService
 {
@@ -72,7 +73,7 @@ class GoogleCalendarService
         Session::put('google_token', $token);
     }
 
-    public function createEvent($evento): Event
+    public function createEvent($evento): Event|null
     {
         try {
             $googleEvent = new Google_Service_Calendar_Event($this->formatEventData($evento));
@@ -90,7 +91,13 @@ class GoogleCalendarService
 
         } catch (Exception $e) {
             Log::error('Errore durante la creazione dell\'evento su Google Calendar: ' . $e->getMessage());
-            throw new \Exception('Impossibile creare l\'evento su Google Calendar.');
+            // throw new \Exception('Impossibile creare l\'evento su Google Calendar.');
+            \Filament\Notifications\Notification::make()
+                ->danger()
+                ->title('Errore durante la creazione dell\'evento su Google Calendar')
+                ->send();
+
+            return null;
         }
     }
 
@@ -102,7 +109,8 @@ class GoogleCalendarService
             return $calendarList->getItems();
         } catch (Exception $e) {
             Log::error('Errore durante il recupero della lista dei calendari su Google Calendar: ' . $e->getMessage());
-            throw new \Exception('Impossibile recuperare la lista dei calendari su Google Calendar.');
+            // throw new \Exception('Impossibile recuperare la lista dei calendari su Google Calendar.');
+            return [];
         }
     }
 
@@ -112,13 +120,31 @@ class GoogleCalendarService
             $this->service->events->delete('primary', $googleEventId);
 
             $evento = Evento::where('google_event_id', $googleEventId)->first();
+            if (!$evento) {
+                return;
+            }
             $evento->update([
                 'google_event_id' => null,
                 'google_event_link' => null,
             ]);
+
         } catch (Exception $e) {
             Log::error('Errore durante l\'eliminazione dell\'evento su Google Calendar: ' . $e->getMessage());
-            throw new \Exception('Impossibile eliminare l\'evento su Google Calendar.');
+            // throw new \Exception('Impossibile eliminare l\'evento su Google Calendar.');
+            \Filament\Notifications\Notification::make()
+                ->danger()
+                ->title('Errore durante l\'eliminazione dell\'evento su Google Calendar')
+                ->send();
+
+            // elimina l'evento anche se non è possibile eliminare l'evento su Google Calendar
+            $evento = Evento::where('google_event_id', $googleEventId)->first();
+            if (!$evento) {
+                return;
+            }
+            $evento->update([
+                'google_event_id' => null,
+                'google_event_link' => null,
+            ]);
         }
     }
 
@@ -135,13 +161,19 @@ class GoogleCalendarService
         ]);
     }
 
-    public function downloadEvent($googleEventId): Google_Service_Calendar_Event
+    public function downloadEvent($googleEventId): Google_Service_Calendar_Event|null
     {
         try {
             return $this->service->events->get('primary', $googleEventId);
         } catch (Exception $e) {
             Log::error('Errore durante il recupero dell\'evento su Google Calendar: ' . $e->getMessage());
-            throw new \Exception('Impossibile recuperare l\'evento su Google Calendar.');
+           // throw new \Exception('Impossibile recuperare l\'evento su Google Calendar.');
+            \Filament\Notifications\Notification::make()
+                ->danger()
+                ->title('Errore durante il recupero dell\'evento su Google Calendar')
+                ->send();
+
+            return null;
         }
     }
 
@@ -226,7 +258,11 @@ class GoogleCalendarService
 
         } catch (Exception $e) {
             Log::error('Errore durante l\'aggiornamento degli invitati su Google Calendar: ' . $e->getMessage());
-            throw new \Exception('Impossibile aggiornare gli invitati su Google Calendar.');
+            // throw new \Exception('Impossibile aggiornare gli invitati su Google Calendar.');
+            \Filament\Notifications\Notification::make()
+                ->danger()
+                ->title('Errore durante l\'aggiornamento degli invitati su Google Calendar')
+                ->send();
         }
     }
 

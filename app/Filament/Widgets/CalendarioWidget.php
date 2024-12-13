@@ -35,7 +35,7 @@ class CalendarioWidget extends FullCalendarWidget
 
         // if user is 'Segreteria' or 'Amministratore' show notification
 
-        if (auth()->user()->hasRole(['Segreteria', 'Amministratore', 'super_admin'])) {
+        if ($this->isAdminUser()) {
             if (!$this->isConnected) {
                 Filament::registerRenderHook(
                     'panels::body.start',
@@ -49,7 +49,6 @@ class CalendarioWidget extends FullCalendarWidget
 
     public function config(): array
     {
-        $googleButton = $this->isConnected ? 'googleDisconnect' : 'googleConnect';
 
         return [
             'initialView' => 'dayGridMonth',
@@ -84,10 +83,11 @@ class CalendarioWidget extends FullCalendarWidget
 
     protected function headerActions(): array
     {
-        if (auth()->user()->hasRole(['Segreteria', 'Amministratore', 'super_admin'])) {
+        if ($this->isAdminUser()) {
             return [
                 ...parent::headerActions(),
                 $this->getConnectionAction(),
+                $this->getDisconnectAction(),
                 $this->getSyncAllEventsAction(),
             ];
         }
@@ -99,7 +99,7 @@ class CalendarioWidget extends FullCalendarWidget
 
     protected function modalActions(): array
     {
-        if(auth()->user()->hasRole(['Segreteria', 'Amministratore', 'super_admin'])) {
+        if ($this->isAdminUser()) {
             return [
                 ...parent::modalActions(),
                 $this->getViewOnGoogleAction(),
@@ -136,7 +136,20 @@ class CalendarioWidget extends FullCalendarWidget
             ->visible(fn(Model $record) => $record->google_event_id)
             ->tooltip('Elimina questo evento da Google Calendar')
             ->disabled(fn() => !$this->isConnected)
-            ->action(fn(Model $record) => $this->deleteFromGoogle($record));
+            ->action(function (Model $record) {
+                $this->deleteFromGoogle($record);
+                $record->update([
+                    'google_event_id' => null,
+                    'google_event_link' => null,
+                ]);
+
+                $this->refreshRecords();
+
+                Notification::make()
+                    ->success()
+                    ->title('Evento eliminato da Google Calendar')
+                    ->send();
+            });
     }
 
     public function deleteFromGoogle(Model $evento): void
@@ -152,7 +165,21 @@ class CalendarioWidget extends FullCalendarWidget
             ->visible(fn(Model $record) => !$record->google_event_id)
             ->tooltip('Crea questo evento su Google Calendar')
             ->disabled(fn() => !$this->isConnected)
-            ->action(fn(Model $record) => $this->syncEvent($record));
+            ->action(function (Model $record) {
+                $this->syncEvent($record);
+
+                $record->update([
+                    'google_event_id' => $record->google_event_id,
+                    'google_event_link' => $record->google_event_link,
+                ]);
+
+                $this->refreshRecords();
+
+                Notification::make()
+                    ->success()
+                    ->title('Evento sincronizzato con Google Calendar')
+                    ->send();
+            });
     }
 
     public function syncEvent(Model $evento): void
