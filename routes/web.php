@@ -20,11 +20,11 @@ Route::middleware([
     })->name('dashboard');
 });
 
-Route::group(['prefix' => 'laravel-filemanager/{pratica}', 'middleware' => ['web', 'auth']], function () {
+Route::group(['prefix' => 'laravel-filemanager/{pratica}', 'middleware' => ['web', 'auth', RestrictPraticaFiles::class]], function () {
     Lfm::routes();
 });
 
-Route::group(['prefix' => 'filemanager/{pratica}', 'middleware' => ['web', 'auth']], function () {
+Route::group(['prefix' => 'filemanager/{pratica}', 'middleware' => ['web', 'auth',RestrictPraticaFiles::class]], function () {
     Lfm::routes();
 });
 

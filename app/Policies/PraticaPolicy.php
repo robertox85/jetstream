@@ -56,6 +56,7 @@ class PraticaPolicy
      */
     public function update(User $user, Pratica $pratica)
     {
+
         return $user->can('update_pratica');
 
         // Solo admin e membri del team possono modificare
@@ -71,13 +72,13 @@ class PraticaPolicy
      */
     public function delete(User $user, Pratica $pratica): bool
     {
-        //  return $user->can('delete_pratica');
+
         // Solo admin e membri del team possono cancellare
         if ($user->hasRole(['super_admin', 'Amministratore'])) {
             return true;
         }
 
-        return $pratica->team_id && $user->teams->contains($pratica->team_id);
+        return $user->can('delete_pratica');
     }
 
     /**
