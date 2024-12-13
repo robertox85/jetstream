@@ -82,7 +82,7 @@ class PraticaResource extends Resource
 
                         // Tab Media
                         Forms\Components\Tabs\Tab::make('Documenti')
-                            ->visibleOn(['create', 'edit'])
+                            ->visibleOn(['edit'])
                             ->icon('heroicon-m-document')
 
                             ->schema([
